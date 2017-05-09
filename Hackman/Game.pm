@@ -83,7 +83,6 @@ sub update_state {
                 cells  => $value,
             );
             $self->_set_field($field);
-            warn $field->as_string;
         }
         else {
             my $player = $player_name eq $self->your_bot_name ? \%player : \%enemy;
@@ -105,10 +104,10 @@ sub update_state {
     for my $player ($self->field->players) {
         if ($player->id == $self->your_bot_id) {
             $player->update(%player);
-            $self->_set_player($player) if !$self->player;
+            $self->_set_player($player);
         } else {
             $player->update(%enemy);
-            $self->_set_enemy($player) if !$self->enemy;
+            $self->_set_enemy($player);
         }
     }
     return;

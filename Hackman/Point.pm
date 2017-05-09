@@ -3,6 +3,11 @@ package Hackman::Point;
 use Moose;
 use namespace::autoclean;
 
+use overload (
+    '""' => \&as_string,
+    '==' => \&is_equal,
+);
+
 has x => (
     is       => 'ro',
     isa      => 'Int',
@@ -14,6 +19,16 @@ has y => (
     isa      => 'Int',
     required => 1,
 );
+
+sub is_equal {
+    my ($a, $b) = @_;
+    return $a->x == $b->x && $a->y == $b->y;
+}
+
+sub as_string {
+    my ($self) = @_;
+    return sprintf '%d,%d', $self->x, $self->y;
+}
 
 my %delta = (
     up    => [-1, 0], 
@@ -32,11 +47,6 @@ sub move {
         x => ($self->x + $delta->[0]),
         y => ($self->y + $delta->[1]),
     );
-}
-
-sub as_string {
-    my ($self) = @_;
-    return sprintf '%d,%d', $self->x, $self->y;
 }
 
 __PACKAGE__->meta->make_immutable;
