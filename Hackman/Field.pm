@@ -1,9 +1,10 @@
 package Hackman::Field;
 
-use Hackman::Point;
-use Hackman::Player;
 use Moose;
 use namespace::autoclean;
+
+use Hackman::Point;
+use Hackman::Player;
 
 use constant {
     BUG     => 'E',
@@ -129,27 +130,26 @@ has weapons => (
     default => sub { {} },
 );
 
-has items => (
+has artifacts => (
     is      => 'bare',
     isa     => 'HashRef[Hackman::Point]',
     traits  => ['Hash'],
     handles => {
-        has_item => 'defined',
-        nr_items => 'count',
+        has_artifact => 'defined',
+        nr_artifacts => 'count',
     },
-    builder => '_build_items',
+    builder => '_build_artifacts',
     lazy    => 1,
 );
 
-sub _build_items {
+sub _build_artifacts {
     my ($self) = @_;
 
-    my %items = map { $_->as_string => $_ } (
-        $self->bugs,
+    my %artifacts = map { $_->as_string => $_ } (
         $self->snippets,
         $self->weapons,
     );
-    return \%items;
+    return \%artifacts;
 }
 
 sub is_valid {

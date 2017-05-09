@@ -1,9 +1,9 @@
 package Hackman::Game;
 
-use Hackman::Field;
-use Hackman::Player;
-use Moose;
+use Moose::Role;
 use namespace::autoclean;
+
+use Hackman::Field;
 
 $| = 1; # flush STDOUT after every print
 my @Command;
@@ -57,7 +57,7 @@ has player => (is => 'ro', writer => '_set_player');
 has enemy  => (is => 'ro', writer => '_set_enemy');
 has time   => (is => 'ro', writer => '_set_time');
 
-sub update_state {
+sub update_game_state {
     my ($self) = @_;
 
     my %player;
@@ -113,5 +113,4 @@ sub update_state {
     return;
 }
 
-__PACKAGE__->meta->make_immutable;
 1;
