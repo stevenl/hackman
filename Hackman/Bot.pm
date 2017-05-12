@@ -19,8 +19,8 @@ sub do_move {
 sub _determine_move {
     my ($self) = @_;
     my $me     = $self->player;
-    my $enemy  = $self->enemy;
     my $field  = $self->field;
+    #warn "\n", $field->as_string, "\n";
 
     my @paths;
     if ($field->nr_artifacts == 0) {
