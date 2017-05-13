@@ -18,11 +18,11 @@
  */
 
 package bot;
-import java.util.ArrayList;
-import java.util.Random;
 
 import move.Move;
-import move.MoveType;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * bot.BotStarter
@@ -47,13 +47,13 @@ public class BotStarter {
 	 * @return A Move object
 	 */
 	public Move doMove(BotState state) {
-		ArrayList<MoveType> validMoveTypes = state.getField().getValidMoveTypes();
+		ArrayList<Move> validMoves = state.getField().getValidMoves();
 
-		if (validMoveTypes.size() <= 0) return new Move(); // No valid moves, pass
+		if (validMoves.size() <= 0) return Move.PASS; // No valid moves
 
-		MoveType randomMoveType = validMoveTypes.get(rand.nextInt(validMoveTypes.size()));
+		Move randomMove = validMoves.get(rand.nextInt(validMoves.size()));
 
-		return new Move(randomMoveType); // Return random but valid move
+		return randomMove;
 	}
 
  	public static void main(String[] args) {

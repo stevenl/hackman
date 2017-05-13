@@ -19,11 +19,10 @@
 
 package bot;
 
-import java.util.Scanner;
-
 import move.Move;
-import move.MoveType;
 import player.Player;
+
+import java.util.Scanner;
 
 /**
  * bot.BotParser
@@ -73,7 +72,7 @@ class BotParser {
 						if (move != null) {
 							System.out.println(move.toString());
 						} else {
-							System.out.println(MoveType.PASS.toString());
+							System.out.println(Move.PASS.toString());
 						}
 					}
 					break;

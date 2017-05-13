@@ -22,7 +22,7 @@ package field;
 import java.awt.*;
 import java.util.ArrayList;
 
-import move.MoveType;
+import move.Move;
 
 /**
  * field.Field
@@ -138,22 +138,26 @@ public class Field {
      * player outside the field or inside a wall
      * @return A list of valid moves
      */
-    public ArrayList<MoveType> getValidMoveTypes() {
-        ArrayList<MoveType> validMoveTypes = new ArrayList<>();
-        int myX = this.myPosition.x;
-        int myY = this.myPosition.y;
+    public ArrayList<Move> getValidMoves() {
+        return getValidMoves(myPosition);
+    }
 
-        Point up = new Point(myX, myY - 1);
-        Point down = new Point(myX, myY + 1);
-        Point left = new Point(myX - 1, myY);
-        Point right = new Point(myX + 1, myY);
+    public ArrayList<Move> getValidMoves(Point p) {
+        ArrayList<Move> validMoves = new ArrayList<>();
+        int x = p.x;
+        int y = p.y;
 
-        if (isPointValid(up)) validMoveTypes.add(MoveType.UP);
-        if (isPointValid(down)) validMoveTypes.add(MoveType.DOWN);
-        if (isPointValid(left)) validMoveTypes.add(MoveType.LEFT);
-        if (isPointValid(right)) validMoveTypes.add(MoveType.RIGHT);
+        Point up    = new Point(x, y - 1);
+        Point down  = new Point(x, y + 1);
+        Point left  = new Point(x - 1, y);
+        Point right = new Point(x + 1, y);
 
-        return validMoveTypes;
+        if (isPointValid(up))    validMoves.add(Move.UP);
+        if (isPointValid(down))  validMoves.add(Move.DOWN);
+        if (isPointValid(left))  validMoves.add(Move.LEFT);
+        if (isPointValid(right)) validMoves.add(Move.RIGHT);
+
+        return validMoves;
     }
 
     /**

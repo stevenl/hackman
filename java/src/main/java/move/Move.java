@@ -22,25 +22,19 @@ package move;
 /**
  * move.Move
  *
- * Used to output a move to the engine
+ * All move types
  *
  * @author Jim van Eeden - jim@riddles.io
  */
-public class Move {
+public enum Move {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    PASS;
 
-    private MoveType moveType = MoveType.PASS;
-
-    public Move() {}
-
-    public Move(MoveType moveType) {
-        this.moveType = moveType;
-    }
-
+    @Override
     public String toString() {
-        if (this.moveType != MoveType.PASS) {
-            return moveType.toString();
-        }
-
-        return moveType.toString();
+        return this.name().toLowerCase();
     }
 }
