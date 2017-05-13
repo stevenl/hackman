@@ -19,10 +19,10 @@
 
 package field;
 
+import move.Move;
+
 import java.awt.*;
 import java.util.ArrayList;
-
-import move.Move;
 
 /**
  * field.Field
@@ -230,5 +230,9 @@ public class Field {
 
     public ArrayList<Point> getWeaponPositions() {
         return this.weaponPositions;
+    }
+
+    public int getNrArtifacts() {
+        return this.snippetPositions.size() + this.weaponPositions.size();
     }
 }

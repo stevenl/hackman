@@ -19,10 +19,10 @@
 
 package bot;
 
-import java.util.HashMap;
-
 import field.Field;
 import player.Player;
+
+import java.util.HashMap;
 
 /**
  * bot.BotState
@@ -41,6 +41,8 @@ public class BotState {
     private int roundNumber;
     private int timebank;
     private String myName;
+    private Player myPlayer;
+    private Player opponentPlayer;
     private HashMap<String, Player> players;
 
     private Field field;
@@ -64,6 +66,15 @@ public class BotState {
 
     public void setMyName(String myName) {
         this.myName = myName;
+    }
+
+    private void setPlayers() {
+        for (Player player : this.players.values()) {
+            if (player.getName().equals(this.myName))
+                this.myPlayer = player;
+            else
+                this.opponentPlayer = player;
+        }
     }
 
     public void setMaxRounds(int value) {
@@ -92,6 +103,18 @@ public class BotState {
 
     public String getMyName() {
         return this.myName;
+    }
+
+    public Player getMyPlayer() {
+        if (this.myPlayer == null)
+            setPlayers();
+        return this.myPlayer;
+    }
+
+    public Player getOpponentPlayer() {
+        if (this.opponentPlayer == null)
+            setPlayers();
+        return this.opponentPlayer;
     }
 
     public int getMaxTimebank() {
