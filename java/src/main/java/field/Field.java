@@ -123,12 +123,35 @@ public class Field {
     public String toString() {
         StringBuilder output = new StringBuilder();
 
-        for (int y = 0; y < this.height; y++) {
-            for (int x = 0; x < this.width; x++) {
-                output.append(this.field[x][y]);
-            }
-            output.append("\n");
+        // x-axis labels
+        output.append("    ");
+        for (int x = 0; x < this.width; x++) {
+            // for readability, skip every 2nd label when values are 2-digits
+            String s = (x < 10 || x % 2 == 1) ? String.format("%2d", x) : "  ";
+            output.append(s);
         }
+        output.append("\n");
+
+        // top border
+        output.append("    ");
+        for (int x = 0; x < this.width; x++)
+            output.append("--");
+        output.append("-\n");
+
+        for (int y = 0; y < this.height; y++) {
+            output.append(String.format("%2d |", y)); // y-axis labels & left border
+
+            for (int x = 0; x < this.width; x++) {
+                output.append(" " + this.field[x][y]);
+            }
+            output.append(" |\n"); // right border
+        }
+
+        // bottom border
+        output.append("    ");
+        for (int x = 0; x < this.width; x++)
+            output.append("--");
+        output.append("-\n");
 
         return output.toString();
     }
