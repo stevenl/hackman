@@ -17,29 +17,23 @@
  *     file that was distributed with this source code.
  */
 
-package bot;
-
-import field.Field;
-import hackman.Path;
-import hackman.Point;
-import move.Move;
-import player.Player;
+package hackman;
 
 import java.util.*;
 import java.util.List;
 import java.util.Queue;
 
 /**
- * bot.BotStarter
+ * hackman.Bot
  *
  * @author Steven Lee - stevenwh.lee@gmail.com
  */
 
-public class BotStarter {
+public class Bot {
 
     private Random rand;
 
-    private BotStarter() {
+    private Bot() {
         this.rand = new Random();
     }
 
@@ -49,7 +43,7 @@ public class BotStarter {
      * @param state The current state of the game
      * @return A Move object
      */
-    public Move doMove(BotState state) {
+    public Move doMove(State state) {
         Field field = state.getField();
         Player me   = state.getMyPlayer();
 
@@ -74,7 +68,7 @@ public class BotStarter {
         return path.moves().get(0);
     }
 
-    private List<Path> findShortestPaths(BotState state, boolean safeMode, int maxPaths) {
+    private List<Path> findShortestPaths(State state, boolean safeMode, int maxPaths) {
         Field field = state.getField();
         Point start = field.getMyPosition();
 
@@ -121,7 +115,7 @@ public class BotStarter {
         return paths;
     }
 
-    private List<Path> findSafePaths(BotState state, int maxIterations) {
+    private List<Path> findSafePaths(State state, int maxIterations) {
         if (maxIterations < 1) maxIterations = 10;
 
         Field field        = state.getField();
@@ -162,7 +156,7 @@ public class BotStarter {
         return paths;
     }
 
-    private Set<Point> threats(BotState state) {
+    private Set<Point> threats(State state) {
         Field field = state.getField();
 
         Set<Point> threats = new HashSet<>();
@@ -174,7 +168,7 @@ public class BotStarter {
         return threats;
     }
 
-    private Move randomMove(BotState state) {
+    private Move randomMove(State state) {
         ArrayList<Move> validMoves = state.getField().getValidMoves();
 
         if (validMoves.size() <= 0) return Move.PASS; // No valid moves
@@ -185,7 +179,7 @@ public class BotStarter {
     }
 
     public static void main(String[] args) {
-        BotParser parser = new BotParser(new BotStarter());
+        Parser parser = new Parser(new Bot());
         parser.run();
     }
 }

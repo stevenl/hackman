@@ -17,42 +17,51 @@
  *     file that was distributed with this source code.
  */
 
-package move;
-
-import hackman.Point;
+package hackman;
 
 /**
- * move.Move
+ * hackman.Player
  *
- * All move types
+ * Stores all information about a player
  *
  * @author Jim van Eeden - jim@riddles.io
  */
-public enum Move {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    PASS;
+public class Player {
 
-    private static final Point up    = new Point(0, -1);
-    private static final Point down  = new Point(0, +1);
-    private static final Point left  = new Point(-1, 0);
-    private static final Point right = new Point(+1, 0);
-    private static final Point pass  = new Point(0, 0);
+    private String name;
+    private int snippets;
+    private boolean hasWeapon;
+    private boolean isParalyzed;
 
-    public Point delta() {
-        switch (this) {
-            case UP:    return up;
-            case DOWN:  return down;
-            case LEFT:  return left;
-            case RIGHT: return right;
-            default:    return pass;
-        }
+    public Player(String playerName) {
+        this.name = playerName;
     }
 
-    @Override
-    public String toString() {
-        return this.name().toLowerCase();
+    public String getName() {
+        return this.name;
+    }
+
+    public int getSnippets() {
+        return this.snippets;
+    }
+
+    public void setSnippets(int snippets) {
+        this.snippets = snippets;
+    }
+
+    public boolean hasWeapon() {
+        return this.hasWeapon;
+    }
+
+    public void setWeapon(boolean hasWeapon) {
+        this.hasWeapon = hasWeapon;
+    }
+
+    public boolean isParalyzed() {
+        return this.isParalyzed;
+    }
+
+    public void setParalyzed(boolean isParalyzed) {
+        this.isParalyzed = isParalyzed;
     }
 }

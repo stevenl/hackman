@@ -17,15 +17,12 @@
  *     file that was distributed with this source code.
  */
 
-package bot;
-
-import move.Move;
-import player.Player;
+package hackman;
 
 import java.util.Scanner;
 
 /**
- * bot.BotParser
+ * hackman.Parser
  * 
  * Main class that will keep reading output from the engine.
  * Will either update the bot state or get actions.
@@ -33,17 +30,17 @@ import java.util.Scanner;
  * @author Jim van Eeden - jim@riddles.io
  */
 
-class BotParser {
+class Parser {
 
 	private Scanner scan;
-	private BotStarter bot;
+	private Bot bot;
 
-	private BotState currentState;
+	private State currentState;
 
-	BotParser(BotStarter bot) {
+	Parser(Bot bot) {
 		this.scan = new Scanner(System.in);
 		this.bot = bot;
-		this.currentState = new BotState();
+		this.currentState = new State();
 	}
 
 	void run() {

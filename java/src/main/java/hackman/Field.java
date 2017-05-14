@@ -17,15 +17,12 @@
  *     file that was distributed with this source code.
  */
 
-package field;
-
-import hackman.Point;
-import move.Move;
+package hackman;
 
 import java.util.ArrayList;
 
 /**
- * field.Field
+ * hackman.Field
  *
  * Stores all information about the playing field and
  * contains methods to perform calculations about the field
@@ -34,10 +31,10 @@ import java.util.ArrayList;
  */
 public class Field {
 
-    private String myId;
-    private String opponentId;
     private int width;
     private int height;
+    private String myId;
+    private String opponentId;
 
     private String[][] field;
     private Point myPosition;
@@ -84,8 +81,8 @@ public class Field {
     }
 
     /**
-     * Parses input string from the engine and stores it in
-     * this.field. Also stores several interesting points.
+     * Parses input string from the engine and stores it in this.field.
+     * Also stores several interesting points.
      * @param input String input from the engine
      */
     public void parseFromString(String input) {
@@ -116,8 +113,7 @@ public class Field {
     }
 
     /**
-     * Returns a string representation of the field that
-     * can be printed
+     * Returns a string representation of the field that can be printed
      * @return String representation of the current field
      */
     public String toString() {

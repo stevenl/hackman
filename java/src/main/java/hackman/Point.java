@@ -19,8 +19,6 @@
 
 package hackman;
 
-import move.Move;
-
 /**
  * hackman.Point
  *

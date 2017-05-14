@@ -17,23 +17,21 @@
  *     file that was distributed with this source code.
  */
 
-package bot;
-
-import field.Field;
-import player.Player;
+package hackman;
 
 import java.util.HashMap;
 
 /**
- * bot.BotState
+ * hackman.State
  *
  * This class stores all settings of the game and the information about the
- * current state of the game. When calling this in BotStarter.doMove, you can trust that this state
+ * current state of the game. When calling this in Bot.doMove, you can trust that this state
  * has been update to current game state (because updates are sent before action request).
  *
  * @author Jim van Eeden - jim@riddles.io
  */
-public class BotState {
+public class State {
+
     private int MAX_TIMEBANK;
     private int TIME_PER_MOVE;
     private int MAX_ROUNDS;
@@ -47,7 +45,7 @@ public class BotState {
 
     private Field field;
 
-    BotState() {
+    State() {
         this.field = new Field();
         this.players = new HashMap<>();
     }

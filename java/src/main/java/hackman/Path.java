@@ -19,8 +19,6 @@
 
 package hackman;
 
-import move.Move;
-
 import java.util.ArrayList;
 import java.util.List;
 
