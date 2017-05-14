@@ -51,9 +51,12 @@ sub _find_shortest_paths {
 
     my @queue   = ( Hackman::Path->new(start => $start) );
     my %visited = ( $start->as_string => 1 );
+    my %targets = map { $_->as_string => 1 } $field->snippets;
 
     if ($safe_mode) {
         $visited{ $_->as_string } = 1 for $self->_threats;
+
+        $targets{ $_->as_string }  = 1 for $field->weapons;
     }
 
     my @paths;
@@ -67,7 +70,7 @@ sub _find_shortest_paths {
                 $field->is_wall( $next->end ) ||
                 !$field->is_valid( $next->end );
 
-            if ( $field->has_artifact($next->end) ) {
+            if ( $targets{ $next->end->as_string } ) {
                 push @paths, $next;
             }
 

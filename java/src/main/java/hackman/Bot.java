@@ -77,17 +77,18 @@ public class Bot {
         Queue<Path> queue  = new LinkedList<>();
         Set<Point> visited = new HashSet<>();
 
-        targets.addAll(field.getSnippetPositions());
-        targets.addAll(field.getWeaponPositions());
-//      System.err.println("targets=" + targets);
-
         queue.add(new Path(start));
         visited.add(start);
+        targets.addAll(field.getSnippetPositions());
 
         if (safeMode) {
             // Ensure that paths that encounter threats are not counted
             // in which case alternative routes to the targets will be found
             visited.addAll(threats(state));
+
+            // Get sword only if we don't already have one
+            // (assuming safeMode means we don't have a sword)
+            targets.addAll(field.getWeaponPositions());
         }
 
         // Do a breadth-first search
