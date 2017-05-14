@@ -19,6 +19,8 @@
 
 package move;
 
+import hackman.Point;
+
 /**
  * move.Move
  *
@@ -32,6 +34,22 @@ public enum Move {
     LEFT,
     RIGHT,
     PASS;
+
+    private static final Point up    = new Point(0, -1);
+    private static final Point down  = new Point(0, +1);
+    private static final Point left  = new Point(-1, 0);
+    private static final Point right = new Point(+1, 0);
+    private static final Point pass  = new Point(0, 0);
+
+    public Point delta() {
+        switch (this) {
+            case UP:    return up;
+            case DOWN:  return down;
+            case LEFT:  return left;
+            case RIGHT: return right;
+            default:    return pass;
+        }
+    }
 
     @Override
     public String toString() {

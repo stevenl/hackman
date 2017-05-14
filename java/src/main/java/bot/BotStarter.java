@@ -21,10 +21,10 @@ package bot;
 
 import field.Field;
 import hackman.Path;
+import hackman.Point;
 import move.Move;
 import player.Player;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.Queue;
@@ -102,7 +102,7 @@ public class BotStarter {
             List<Move> validMoves = field.getValidMoves(path.end());
 
             for (Move m : validMoves) {
-                Path next = path.addMove(m);
+                Path next = new Path(path, m);
                 Point nextPosition = next.end();
 
                 if (visited.contains(nextPosition))
@@ -141,7 +141,7 @@ public class BotStarter {
             List<Move> validMoves = field.getValidMoves(path.end());
 
             for (Move m : validMoves) {
-                Path next = path.addMove(m);
+                Path next = new Path(path, m);
                 Point nextPosition = next.end();
 
                 if (visited.contains(nextPosition))

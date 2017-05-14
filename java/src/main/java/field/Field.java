@@ -19,9 +19,9 @@
 
 package field;
 
+import hackman.Point;
 import move.Move;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 /**

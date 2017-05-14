@@ -1,10 +1,28 @@
+/*
+ * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
+ *
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
+ *
+ *     For the full copyright and license information, please view the LICENSE
+ *     file that was distributed with this source code.
+ */
+
 package hackman;
 
-import java.awt.Point;
+import move.Move;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import move.Move;
 
 /**
  * hackman.Path
@@ -30,46 +48,28 @@ public class Path {
         this.moves = moves;
     }
 
+    public Path(Path path, Move nextMove) {
+        List<Move> moves = new ArrayList<>(path.moves());
+        moves.add(nextMove);
+
+        this.start = path.start();
+        this.end   = new Point(path.end(), nextMove);
+        this.moves = moves;
+    }
+
     public Point start() {
         return this.start;
     }
+
     public Point end() {
         return this.end;
     }
+
     public List<Move> moves() {
         return this.moves;
     }
 
-    public Path addMove(Move move) {
-        Point end = _movePoint(this.end, move);
-        List<Move> moves = new ArrayList<>(this.moves);
-        moves.add(move);
-
-        return new Path(this.start, end, moves);
-    }
-
-    private Point _movePoint(Point p, Move m) {
-        Point delta;
-        switch (m) {
-            case UP:
-                delta = new Point(0, -1);
-                break;
-            case DOWN:
-                delta = new Point(0, +1);
-                break;
-            case LEFT:
-                delta = new Point(-1, 0);
-                break;
-            case RIGHT:
-                delta = new Point(+1, 0);
-                break;
-            default:
-                delta = new Point(0, 0);
-        }
-
-        return new Point((int) (p.getX() + delta.getX()), (int) (p.getY() + delta.getY()));
-    }
-
+    @Override
     public String toString() {
         return String.format("%s, %s: %s", this.start, this.end, this.moves);
     }
