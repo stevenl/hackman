@@ -49,47 +49,88 @@ public class Bot {
 
 //      System.err.println("\n" + field);
 
-        List<Path> paths = null;
+        Path path = null;
         if (field.getNrArtifacts() == 0) {
-            paths = findSafePaths(state, 10);
+            path = findSafePath(state, 10);
         } else {
             if (!me.hasWeapon())
-                paths = findShortestPaths(state, true, 0);
+                path = findSafePath(state);
 
             // Fall back on an unsafe route if there is no safe route (if no weapon)
-            if (paths == null || paths.isEmpty())
-                paths = findShortestPaths(state, false, 0);
+            if (path == null)
+                path = findBestPath(state);
         }
 
-        if (paths.isEmpty())
+        if (path == null)
             return randomMove(state);
 
-        Path path = paths.get(0);
         return path.moves().get(0);
     }
 
-    private List<Path> findShortestPaths(State state, boolean safeMode, int maxPaths) {
+    private Path findSafePath(State state) {
         Field field = state.getField();
-        Point start = field.getMyPosition();
+        Set<Point> avoid   = new HashSet<>(threats(state));
+        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
 
+        // Get sword since we don't already have one
+        targets.addAll(field.getWeaponPositions());
+
+        List<Path> paths = findShortestPaths(field, field.getMyPosition(), targets, avoid);
+
+        if (paths.isEmpty())
+            return null;
+
+        return paths.get(0);
+    }
+
+    private Path findBestPath(State state) {
+        Field field = state.getField();
+        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
+
+        List<Path> paths = findShortestPaths(field, field.getMyPosition(), targets);
+
+        if (paths.isEmpty())
+            return null;
+
+        return paths.get(0);
+    }
+
+    /**
+     * Does a breadth-first search to find an optimal path from the given
+     * origin to the closest target.
+     *
+     * @param field The game field
+     * @param origin The starting point (e.g. my current position)
+     * @param targets The end points to aim for (e.g. snippet positions)
+     * @return a list of Paths to each of the targets. The list is in increasing order of distance.
+     */
+    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets) {
+        Set<Point> avoid = new HashSet<>();
+        return findShortestPaths(field, origin, targets, avoid);
+    }
+
+    /**
+     * Does a breadth-first search to find an optimal path from the given
+     * origin to each of the targets. The resulting paths will never pass
+     * through any of the points to avoid.
+     *
+     * @param field The game field
+     * @param origin The starting point (e.g. my current position)
+     * @param targets The end points to aim for (e.g. snippet positions)
+     * @param avoid The points to avoid (e.g. threats)
+     * @return a list of Paths to each of the targets. The list is in increasing order of distance.
+     */
+    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid) {
         List<Path> paths   = new ArrayList<>();
-        Set<Point> targets = new HashSet<>();
         Queue<Path> queue  = new LinkedList<>();
         Set<Point> visited = new HashSet<>();
 
-        queue.add(new Path(start));
-        visited.add(start);
-        targets.addAll(field.getSnippetPositions());
+        queue.add(new Path(origin));
+        visited.add(origin);
 
-        if (safeMode) {
-            // Ensure that paths that encounter threats are not counted
-            // in which case alternative routes to the targets will be found
-            visited.addAll(threats(state));
-
-            // Get sword only if we don't already have one
-            // (assuming safeMode means we don't have a sword)
-            targets.addAll(field.getWeaponPositions());
-        }
+        // Ensure that paths that encounter threats are not counted
+        // in which case alternative routes to the targets will be found
+        if (avoid != null) visited.addAll(avoid);
 
         // Do a breadth-first search
         while (!queue.isEmpty()) {
@@ -106,9 +147,6 @@ public class Bot {
                 if (targets.contains(nextPosition))
                     paths.add(next);
 
-                if (maxPaths > 0 && maxPaths == paths.size())
-                    return paths;
-
                 visited.add(nextPosition);
                 queue.add(next);
             }
@@ -116,7 +154,7 @@ public class Bot {
         return paths;
     }
 
-    private List<Path> findSafePaths(State state, int maxIterations) {
+    private Path findSafePath(State state, int maxIterations) {
         if (maxIterations < 1) maxIterations = 10;
 
         Field field        = state.getField();
@@ -154,7 +192,11 @@ public class Bot {
                     break search;
             }
         }
-        return paths;
+
+        if (paths.isEmpty())
+            return null;
+
+        return paths.get(0);
     }
 
     private Set<Point> threats(State state) {
