@@ -20,6 +20,7 @@
 package hackman;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * hackman.Field
@@ -37,16 +38,16 @@ public class Field {
     private String opponentId;
 
     private String[][] field;
-    private Point myPosition;
-    private Point opponentPosition;
+    private HashMap<Integer, Point> playerPositions; // <id, position>
     private ArrayList<Point> enemyPositions;
     private ArrayList<Point> snippetPositions;
     private ArrayList<Point> weaponPositions;
 
     public Field() {
-        this.enemyPositions = new ArrayList<>();
+        this.playerPositions  = new HashMap<>();
+        this.enemyPositions   = new ArrayList<>();
         this.snippetPositions = new ArrayList<>();
-        this.weaponPositions = new ArrayList<>();
+        this.weaponPositions  = new ArrayList<>();
     }
 
     /**
@@ -73,8 +74,7 @@ public class Field {
             }
         }
 
-        this.myPosition = null;
-        this.opponentPosition = null;
+        this.playerPositions.clear();
         this.enemyPositions.clear();
         this.snippetPositions.clear();
         this.weaponPositions.clear();
@@ -97,9 +97,13 @@ public class Field {
 
                 for (char c : cell.toCharArray()) {  // Multiple things can be on same position
                     if (c == this.myId.charAt(0)) {
-                        this.myPosition = new Point(x, y);
+                        int id = Character.getNumericValue(c);
+                        Point position = new Point(x, y);
+                        this.playerPositions.put(id, position);
                     } else if (c == this.opponentId.charAt(0)) {
-                        this.opponentPosition = new Point(x, y);
+                        int id = Character.getNumericValue(c);
+                        Point position = new Point(x, y);
+                        this.playerPositions.put(id, position);
                     } else if (c == 'C') {
                         this.snippetPositions.add(new Point(x, y));
                     } else if (c == 'E') {
@@ -158,7 +162,7 @@ public class Field {
      * @return A list of valid moves
      */
     public ArrayList<Move> getValidMoves() {
-        return getValidMoves(myPosition);
+        return getValidMoves(getMyPosition());
     }
 
     public ArrayList<Move> getValidMoves(Point p) {
@@ -208,12 +212,16 @@ public class Field {
         this.height = height;
     }
 
+    public Point getPlayerPosition(int playerId) {
+        return playerPositions.get(playerId);
+    }
+
     public Point getMyPosition() {
-        return this.myPosition;
+        return this.playerPositions.get(this.myId);
     }
 
     public Point getOpponentPosition() {
-        return this.opponentPosition;
+        return this.playerPositions.get(this.opponentId);
     }
 
     public ArrayList<Point> getEnemyPositions() {

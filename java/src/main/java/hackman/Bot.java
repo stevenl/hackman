@@ -53,12 +53,10 @@ public class Bot {
         if (field.getNrArtifacts() == 0) {
             path = findSafePath(state, 10);
         } else {
-            if (!me.hasWeapon())
-                path = findSafePath(state);
+            List<Path> paths = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
 
-            // Fall back on an unsafe route if there is no safe route (if no weapon)
-            if (path == null)
-                path = findBestPath(state);
+            if (!paths.isEmpty())
+                path = paths.get(0);
         }
 
         if (path == null)
@@ -67,32 +65,34 @@ public class Bot {
         return path.moves().get(0);
     }
 
-    private Path findSafePath(State state) {
+    private List<Path> getPaths(State state, Player a, Player b) {
         Field field = state.getField();
-        Set<Point> avoid   = new HashSet<>(threats(state));
-        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
+        Point origin = field.getPlayerPosition(a.getId());
 
-        // Get sword since we don't already have one
-        targets.addAll(field.getWeaponPositions());
+        List<Path> paths = null;
+        if (!a.hasWeapon()) {
+            Set<Point> targets = new HashSet<>();
+            targets.addAll(field.getSnippetPositions());
+            // Get sword since we don't already have one
+            targets.addAll(field.getWeaponPositions());
 
-        List<Path> paths = findShortestPaths(field, field.getMyPosition(), targets, avoid);
+            Set<Point> threats = new HashSet<>(field.getEnemyPositions());
+            if (b.hasWeapon()) {
+                Point position = field.getPlayerPosition(b.getId());
+                threats.add(position);
+            }
 
-        if (paths.isEmpty())
-            return null;
+            paths = findShortestPaths(field, origin, targets, threats);
+        }
 
-        return paths.get(0);
-    }
+        // Fall back on an unsafe route if there is no safe route (if no weapon)
+        if (paths == null || paths.isEmpty()) {
+            Set<Point> targets = new HashSet<>();
+            targets.addAll(field.getSnippetPositions());
+            paths = findShortestPaths(field, origin, targets);
+        }
 
-    private Path findBestPath(State state) {
-        Field field = state.getField();
-        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
-
-        List<Path> paths = findShortestPaths(field, field.getMyPosition(), targets);
-
-        if (paths.isEmpty())
-            return null;
-
-        return paths.get(0);
+        return paths;
     }
 
     /**

@@ -109,6 +109,8 @@ class Parser {
 					int opponentId = 2 - (myId + 1);
 					this.currentState.getField().setMyId(myId);
 					this.currentState.getField().setOpponentId(opponentId);
+					this.currentState.getMyPlayer().setId(myId);
+					this.currentState.getOpponentPlayer().setId(opponentId);
 					break;
 				case "field_width":
 					this.currentState.getField().setWidth(Integer.parseInt(value));

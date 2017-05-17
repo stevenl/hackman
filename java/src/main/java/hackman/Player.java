@@ -28,6 +28,7 @@ package hackman;
  */
 public class Player {
 
+    private int id;
     private String name;
     private int snippets;
     private boolean hasWeapon;
@@ -35,6 +36,14 @@ public class Player {
 
     public Player(String playerName) {
         this.name = playerName;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public String getName() {
