@@ -38,6 +38,8 @@ public class State {
 
     private int roundNumber;
     private int timebank;
+    private int myId;
+    private int opponentId;
     private String myName;
     private Player myPlayer;
     private Player opponentPlayer;
@@ -46,6 +48,7 @@ public class State {
     private Field field;
 
     State() {
+        this.myId = this.opponentId = -1;
         this.field = new Field();
         this.players = new HashMap<>();
     }
@@ -60,6 +63,14 @@ public class State {
 
     public void setTimePerMove(int value) {
         this.TIME_PER_MOVE = value;
+    }
+
+    public void setMyId(int id) {
+        this.myId = id;
+    }
+
+    public void setOpponentId(int id) {
+        this.opponentId = id;
     }
 
     public void setMyName(String myName) {
@@ -97,6 +108,14 @@ public class State {
 
     public Field getField() {
         return this.field;
+    }
+
+    public int getMyId() {
+        return this.myId;
+    }
+
+    public int getOpponentId() {
+        return this.opponentId;
     }
 
     public String getMyName() {

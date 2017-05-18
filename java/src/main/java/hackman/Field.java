@@ -34,8 +34,8 @@ public class Field {
 
     private int width;
     private int height;
-    private String myId;
-    private String opponentId;
+    private int myId;
+    private int opponentId;
 
     private String[][] field;
     private HashMap<Integer, Point> playerPositions; // <id, position>
@@ -95,21 +95,24 @@ public class Field {
                 String cell = cells[x + (y * this.width)];
                 this.field[x][y] = cell;
 
-                for (char c : cell.toCharArray()) {  // Multiple things can be on same position
-                    if (c == this.myId.charAt(0)) {
-                        int id = Character.getNumericValue(c);
-                        Point position = new Point(x, y);
-                        this.playerPositions.put(id, position);
-                    } else if (c == this.opponentId.charAt(0)) {
-                        int id = Character.getNumericValue(c);
-                        Point position = new Point(x, y);
-                        this.playerPositions.put(id, position);
-                    } else if (c == 'C') {
-                        this.snippetPositions.add(new Point(x, y));
-                    } else if (c == 'E') {
-                        this.enemyPositions.add(new Point(x, y));
-                    } else if (c == 'W') {
-                        this.weaponPositions.add(new Point(x, y));
+                // Multiple things can be on same position
+                for (char c : cell.toCharArray()) {
+                    Point position = new Point(x, y);
+                    switch (c) {
+                        case 'C':
+                            this.snippetPositions.add(position);
+                            break;
+                        case 'E':
+                            this.enemyPositions.add(position);
+                            break;
+                        case 'W':
+                            this.weaponPositions.add(position);
+                            break;
+                        default:
+                            if (Character.isDigit(c)) {
+                                int id = Character.getNumericValue(c);
+                                this.playerPositions.put(id, position);
+                            }
                     }
                 }
             }
@@ -197,11 +200,11 @@ public class Field {
     }
 
     public void setMyId(int id) {
-        this.myId = id + "";
+        this.myId = id;
     }
 
     public void setOpponentId(int id) {
-        this.opponentId = id + "";
+        this.opponentId = id;
     }
 
     public void setWidth(int width) {

@@ -103,14 +103,26 @@ class Parser {
 					break;
 				case "your_bot":
 					this.currentState.setMyName(value);
+
+					if (this.currentState.getMyId() != -1) {
+						int myId  = this.currentState.getMyId();
+						int oppId = this.currentState.getOpponentId();
+						this.currentState.getMyPlayer().setId(myId);
+						this.currentState.getOpponentPlayer().setId(oppId);
+					}
 					break;
 				case "your_botid":
 					int myId = Integer.parseInt(value);
 					int opponentId = 2 - (myId + 1);
+					this.currentState.setMyId(myId);
+					this.currentState.setOpponentId(opponentId);
 					this.currentState.getField().setMyId(myId);
 					this.currentState.getField().setOpponentId(opponentId);
-					this.currentState.getMyPlayer().setId(myId);
-					this.currentState.getOpponentPlayer().setId(opponentId);
+
+					if (this.currentState.getMyName() != null) {
+						this.currentState.getMyPlayer().setId(myId);
+						this.currentState.getOpponentPlayer().setId(opponentId);
+					}
 					break;
 				case "field_width":
 					this.currentState.getField().setWidth(Integer.parseInt(value));
