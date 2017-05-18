@@ -20,8 +20,6 @@
 package hackman;
 
 import java.util.*;
-import java.util.List;
-import java.util.Queue;
 
 /**
  * hackman.Bot
@@ -47,16 +45,26 @@ public class Bot {
         Field field = state.getField();
         Player me   = state.getMyPlayer();
 
-//      System.err.println("\n" + field);
+//        System.err.println("\n" + field);
 
         Path path = null;
         if (field.getNrArtifacts() == 0) {
-            path = findSafePath(state, 10);
+            path = findSafePath(state, 20);
         } else {
-            List<Path> paths = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
+            List<Path> myPaths  = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
+            List<Path> oppPaths = getPaths(state, state.getOpponentPlayer(), state.getMyPlayer());
 
-            if (!paths.isEmpty())
-                path = paths.get(0);
+            // Don't go for the target if the opponent is closer to it
+            if (myPaths.size() > 1 && !oppPaths.isEmpty()) {
+                Path myPath  = myPaths.get(0);
+                Path oppPath = oppPaths.get(0);
+
+                if (myPath.end() == oppPath.end() && myPath.moves().size() > oppPath.moves().size())
+                    myPaths.remove(0);
+            }
+
+            if (!myPaths.isEmpty())
+                path = myPaths.get(0);
         }
 
         if (path == null)
@@ -133,7 +141,7 @@ public class Bot {
 
         // Ensure that paths that encounter threats are not counted
         // in which case alternative routes to the targets will be found
-        if (avoid != null) visited.addAll(avoid);
+        visited.addAll(avoid);
 
         // Do a breadth-first search
         while (!queue.isEmpty()) {
