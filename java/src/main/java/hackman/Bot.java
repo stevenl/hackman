@@ -89,6 +89,9 @@ public class Bot {
         if (paths == null || paths.isEmpty()) {
             Set<Point> targets = new HashSet<>();
             targets.addAll(field.getSnippetPositions());
+            if (!a.hasWeapon())
+                targets.addAll(field.getWeaponPositions());
+
             paths = findShortestPaths(field, origin, targets);
         }
 
