@@ -59,7 +59,7 @@ public class Bot {
                 Path myPath  = myPaths.get(0);
                 Path oppPath = oppPaths.get(0);
 
-                if (myPath.end() == oppPath.end() && myPath.moves().size() > oppPath.moves().size())
+                if (myPath.end() == oppPath.end() && myPath.nrMoves() > oppPath.nrMoves())
                     myPaths.remove(0);
             }
 
@@ -89,6 +89,7 @@ public class Bot {
                 Point position = field.getPlayerPosition(b.getId());
                 threats.add(position);
             }
+            threats.addAll(findImmediateThreats(field, origin, threats));
 
             paths = findShortestPaths(field, origin, targets, threats);
         }
@@ -106,6 +107,17 @@ public class Bot {
         return paths;
     }
 
+    private Set<Point> findImmediateThreats(Field field, Point origin, Set<Point> threats) {
+        Set<Point> dangers = new HashSet<>();
+
+        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 2);
+        for (Path p : pathsToThreats) {
+            Move m = p.moves().get(0);
+            dangers.add(new Point(origin, m));
+        }
+        return dangers;
+    }
+
     /**
      * Does a breadth-first search to find an optimal path from the given
      * origin to the closest target.
@@ -116,8 +128,11 @@ public class Bot {
      * @return a list of Paths to each of the targets. The list is in increasing order of distance.
      */
     private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets) {
-        Set<Point> avoid = new HashSet<>();
-        return findShortestPaths(field, origin, targets, avoid);
+        return findShortestPaths(field, origin, targets, null, 0);
+    }
+
+    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid) {
+        return findShortestPaths(field, origin, targets, avoid, 0);
     }
 
     /**
@@ -131,7 +146,10 @@ public class Bot {
      * @param avoid The points to avoid (e.g. threats)
      * @return a list of Paths to each of the targets. The list is in increasing order of distance.
      */
-    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid) {
+    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid, int maxMoves) {
+        if (avoid == null) avoid = new HashSet<>();
+        if (maxMoves <= 0) maxMoves = Integer.MAX_VALUE;
+
         List<Path> paths   = new ArrayList<>();
         Queue<Path> queue  = new LinkedList<>();
         Set<Point> visited = new HashSet<>();
@@ -144,14 +162,17 @@ public class Bot {
         visited.addAll(avoid);
 
         // Do a breadth-first search
+        search:
         while (!queue.isEmpty()) {
             Path path = queue.remove();
             List<Move> validMoves = field.getValidMoves(path.end());
 
             for (Move m : validMoves) {
                 Path next = new Path(path, m);
-                Point nextPosition = next.end();
+                if (next.nrMoves() > maxMoves)
+                    break search;
 
+                Point nextPosition = next.end();
                 if (visited.contains(nextPosition))
                     continue;
 

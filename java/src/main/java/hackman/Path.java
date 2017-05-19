@@ -67,6 +67,10 @@ public class Path {
         return this.moves;
     }
 
+    public int nrMoves() {
+        return this.moves.size();
+    }
+
     @Override
     public String toString() {
         return String.format("%s, %s: %s", this.start, this.end, this.moves);
