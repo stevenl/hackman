@@ -37,7 +37,7 @@ public class Field {
     private int myId;
     private int opponentId;
 
-    private String[][] field;
+    private String[][] field = null;
     private HashMap<Integer, Point> playerPositions; // <id, position>
     private ArrayList<Point> enemyPositions;
     private ArrayList<Point> snippetPositions;
@@ -52,15 +52,15 @@ public class Field {
 
     /**
      * Initializes field
-     * @throws Exception: exception
+     * @throws IllegalStateException: exception
      */
-    public void initField() throws Exception {
-        try {
-            this.field = new String[this.width][this.height];
-        } catch (Exception e) {
-            throw new Exception("Error: trying to initialize field while field "
-                    + "settings have not been parsed yet.");
-        }
+    public void initField() throws IllegalStateException {
+        if (this.width == 0)
+            throw new IllegalStateException("Field 'width' has not been set");
+        if (this.height == 0)
+            throw new IllegalStateException("Field 'height' has not been set");
+
+        this.field = new String[this.width][this.height];
         clearField();
     }
 
@@ -86,7 +86,10 @@ public class Field {
      * @param input String input from the engine
      */
     public void parseFromString(String input) {
-        clearField();
+        if (this.field == null)
+            initField();
+        else
+            clearField();
 
         String[] cells = input.split(",");
 

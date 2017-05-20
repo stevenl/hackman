@@ -36,7 +36,7 @@ public class Bot {
 
     private Random rand;
 
-    private Bot() {
+    Bot() {
         this.rand = new Random();
     }
 
@@ -46,7 +46,7 @@ public class Bot {
      * @param state The current state of the game
      * @return A Move object
      */
-    public Move doMove(State state) {
+    Move doMove(State state) {
         Field field = state.getField();
         Player me   = state.getMyPlayer();
 

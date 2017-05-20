@@ -28,7 +28,7 @@ package hackman;
  */
 public class Player {
 
-    private int id;
+    private int id = -1;
     private String name;
     private int snippets;
     private boolean hasWeapon;
@@ -73,4 +73,7 @@ public class Player {
     public void setParalyzed(boolean isParalyzed) {
         this.isParalyzed = isParalyzed;
     }
+
+//    @Override
+//    public String toString() { return this.id + "," + this.name; }
 }
