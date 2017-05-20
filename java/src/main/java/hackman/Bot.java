@@ -29,6 +29,11 @@ import java.util.*;
 
 public class Bot {
 
+    public static void main(String[] args) {
+        Parser parser = new Parser(new Bot());
+        parser.run();
+    }
+
     private Random rand;
 
     private Bot() {
@@ -54,12 +59,15 @@ public class Bot {
             List<Path> myPaths  = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
             List<Path> oppPaths = getPaths(state, state.getOpponentPlayer(), state.getMyPlayer());
 
+//            System.err.println("myPath=" + myPaths.get(0));
+//            System.err.println("oppPath=" + oppPaths.get(0));
+
             // Don't go for the target if the opponent is closer to it
             if (myPaths.size() > 1 && !oppPaths.isEmpty()) {
                 Path myPath  = myPaths.get(0);
                 Path oppPath = oppPaths.get(0);
 
-                if (myPath.end() == oppPath.end() && myPath.nrMoves() > oppPath.nrMoves())
+                if (myPath.end().equals(oppPath.end()) && myPath.nrMoves() > oppPath.nrMoves())
                     myPaths.remove(0);
             }
 
@@ -251,10 +259,5 @@ public class Bot {
         int random = rand.nextInt(validMoves.size());
 
         return validMoves.get(random);
-    }
-
-    public static void main(String[] args) {
-        Parser parser = new Parser(new Bot());
-        parser.run();
     }
 }
