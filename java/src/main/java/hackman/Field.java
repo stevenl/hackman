@@ -167,10 +167,6 @@ public class Field {
      * player outside the field or inside a wall
      * @return A list of valid moves
      */
-    public ArrayList<Move> getValidMoves() {
-        return getValidMoves(getMyPosition());
-    }
-
     public ArrayList<Move> getValidMoves(Point p) {
         ArrayList<Move> validMoves = new ArrayList<>();
         int x = p.x;
