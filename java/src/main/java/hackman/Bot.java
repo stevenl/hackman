@@ -68,13 +68,43 @@ public class Bot {
                 myPaths.remove(0);
         }
 
-        if (!myPaths.isEmpty())
-            path = myPaths.get(0);
+        Move move = null;
+        if (!myPaths.isEmpty()) {
+            float maxScore = -1;
+            Map<Move, Float> moveScores = calculateMoveScores(myPaths);
+//            System.err.println("scores=" + moveScores);
 
-        if (path == null)
+            for (Map.Entry<Move, Float> e : moveScores.entrySet()) {
+                float score = e.getValue();
+                if (score <= maxScore)
+                    continue;
+
+                move = e.getKey();
+                maxScore = score;
+            }
+        }
+
+        if (move == null)
             return randomMove(field, field.getMyPosition());
 
-        return path.moves().get(0);
+        return move;
+    }
+
+    private Map<Move, Float> calculateMoveScores(List<Path> paths) {
+        Map<Move, Float> moveScores = new HashMap<>();
+        for (Path p : paths) {
+            Move move = p.moves().get(0);
+
+            float score;
+            if (moveScores.containsKey(move))
+                score = moveScores.get(move);
+            else
+                score = 0;
+
+            score += 1.0 / p.nrMoves();
+            moveScores.put(move, score);
+        }
+        return moveScores;
     }
 
     private List<Path> getPaths(State state, Player a, Player b) {
@@ -96,6 +126,7 @@ public class Bot {
             if (targets.isEmpty()) maxMoves = 8;
 
             paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
+//            System.err.println("safe=" + paths.get(0));
         }
 
         // Fall back on an unsafe route if there is no safe route (if no weapon)
@@ -105,6 +136,7 @@ public class Bot {
             if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
 
             paths = findShortestPaths(field, origin, targets, null, 0);
+//            System.err.println("unsafe=" + paths.get(0));
         }
 
         return paths;
