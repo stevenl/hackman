@@ -118,16 +118,21 @@ public class Bot {
             // Get sword since we don't already have one
             targets.addAll(field.getWeaponPositions());
 
-            Set<Point> avoid = new HashSet<>(field.getEnemyPositions());
-            if (b.hasWeapon()) avoid.add(field.getPlayerPosition(b.getId()));
-            avoid.addAll(findImmediateThreats(field, origin, avoid));
-            avoid.addAll(findTraps(field, origin, avoid));
+            Set<Point> threats = new HashSet<>(field.getEnemyPositions());
+            if (b.hasWeapon()) threats.add(field.getPlayerPosition(b.getId()));
+
+            Set<Point> immediateThreats = findImmediateThreats(field, origin, threats);
+            Set<Point> traps = findTraps(field, origin, threats);
+
+            Set<Point> avoid = new HashSet<>(threats);
+            avoid.addAll(traps);
+            avoid.addAll(immediateThreats);
 
             int maxMoves = 0;
             if (targets.isEmpty()) maxMoves = 8;
 
             paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
-//            System.err.println("safe=" + paths.get(0));
+//            if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
         }
 
         // Fall back on an unsafe route if there is no safe route (if no weapon)
@@ -137,7 +142,7 @@ public class Bot {
             if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
 
             paths = findShortestPaths(field, origin, targets, null, 0);
-//            System.err.println("unsafe=" + paths.get(0));
+//            if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
 
         return paths;
@@ -168,16 +173,12 @@ public class Bot {
     }
 
     private Set<Point> findTraps(Field field, Point origin, Set<Point> avoid) {
-        List<Path> paths2Intersections = new ArrayList<>();
+        List<Path> toIntersections = new ArrayList<>();
         Queue<Path> queue  = new LinkedList<>();
         Set<Point> visited = new HashSet<>();
 
         queue.add(new Path(origin));
         visited.add(origin);
-
-        // Ensure that paths that encounter threats are not counted
-        // in which case alternative routes to the targets will be found
-        visited.addAll(avoid);
 
         // Do a breadth-first search to find the intersections
         while (!queue.isEmpty()) {
@@ -185,8 +186,8 @@ public class Bot {
             List<Move> validMoves = field.getValidMoves(path.end());
 
             // Have we reached an intersection?
-            if (validMoves.size() > 2) {
-                paths2Intersections.add(path);
+            if (path.nrMoves() > 0 && validMoves.size() > 2) {
+                toIntersections.add(path);
                 continue;
             }
 
@@ -198,36 +199,40 @@ public class Bot {
                     continue;
 
                 visited.add(nextPosition);
-                queue.add(next);
+
+                if (!avoid.contains(nextPosition))
+                    queue.add(next);
             }
         }
 
         // Now find the threat nearest to each intersection
         // i.e. how many moves before they can trap you in?
+        Map<Point, Path> intersectionPaths = new HashMap<>();
+        for (Path p : toIntersections) {
+            intersectionPaths.put(p.end(), p);
+            queue.add(new Path(p.end())); // start new path from intersection
+        }
+
         Map<Path, Path> intersectionThreats = new HashMap<>();
-        for (Path intersectionPath : paths2Intersections) {
-            Set<Point> visited2 = new HashSet<>(visited);
+        while (!queue.isEmpty()) {
+            Path path = queue.remove();
+            List<Move> validMoves = field.getValidMoves(path.end());
 
-            queue.add(new Path(intersectionPath.end()));
-            visited2.add(intersectionPath.end());
+            for (Move m : validMoves) {
+                Path next = new Path(path, m);
+                Point nextPosition = next.end();
 
-            while (!queue.isEmpty()) {
-                Path path = queue.remove();
-                List<Move> validMoves = field.getValidMoves(path.end());
-
-                for (Move m : validMoves) {
-                    Path next = new Path(path, m);
-                    Point nextPosition = next.end();
-
-                    if (visited2.contains(nextPosition))
-                        continue;
-
-                    if (avoid.contains(nextPosition))
-                        intersectionThreats.put(intersectionPath, next);
-
-                    visited2.add(nextPosition);
-                    queue.add(next);
+                if (avoid.contains(nextPosition)) {
+                    Path intPath = intersectionPaths.get(path.start());
+                    intersectionThreats.put(intPath, next);
+                    break;
                 }
+
+                if (visited.contains(nextPosition))
+                    continue;
+
+                visited.add(nextPosition);
+                queue.add(next);
             }
         }
 
@@ -236,9 +241,8 @@ public class Bot {
             Path intersection = e.getKey();
             Path trapper = e.getValue();
 
-            if (intersection.nrMoves() <= trapper.nrMoves()) {
-                Point p = new Point(intersection.start(), intersection.moves().get(0));
-                traps.add(p);
+            if (intersection.nrMoves() >= trapper.nrMoves()) {
+                traps.add(intersection.end());
             }
         }
         return traps;
