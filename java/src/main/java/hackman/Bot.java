@@ -20,6 +20,7 @@
 package hackman;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * hackman.Bot
@@ -118,7 +119,14 @@ public class Bot {
             Set<Point> threats = new HashSet<>(field.getEnemyPositions());
             if (b.hasWeapon()) threats.add(field.getPlayerPosition(b.getId()));
 
-            Set<Point> immediateThreats = findImmediateThreats(field, origin, threats);
+            // Detect threats that are 2 steps away such that they can harm us
+            // by moving to the position that we want to move to.
+            List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
+            Set<Point> immediateThreats = pathsToThreats.stream()
+                    .filter(path -> path.nrMoves() == 2)
+                    .map(path -> path.position(1))
+                    .collect(Collectors.toSet());
+
             Set<Point> traps = findTraps(field, origin, threats);
 
             Set<Point> avoid = new HashSet<>(threats);
@@ -155,30 +163,6 @@ public class Bot {
         }
 
         return paths;
-    }
-
-    /**
-     * Detect threats that are 2 steps away such that they can harm us by
-     * moving to the position that we want to move to. Such threats are not
-     * detected by the normal bread-first search when they are not directly
-     * in our path to reach a target.
-     *
-     * @param field The game field
-     * @param origin the starting position (my current position)
-     * @param threats The set of positions that have threats
-     * @return A set of adjacent positions that are dangerous to move to
-     */
-    private Set<Point> findImmediateThreats(Field field, Point origin, Set<Point> threats) {
-        Set<Point> dangers = new HashSet<>();
-
-        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
-        for (Path p : pathsToThreats) {
-            if (p.nrMoves() == 2) {
-                Move m = p.moves().get(0);
-                dangers.add(new Point(origin, m));
-            }
-        }
-        return dangers;
     }
 
     private Set<Point> findTraps(Field field, Point origin, Set<Point> avoid) {

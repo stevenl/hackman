@@ -33,17 +33,15 @@ public class Path {
     private Point start;
     private Point end;
     private List<Move> moves;
+    private List<Point> positions;
 
     public Path(Point start) {
         this.start = start;
         this.end   = start;
         this.moves = new ArrayList<>();
-    }
 
-    public Path(Point start, Point end, List<Move> moves) {
-        this.start = start;
-        this.end   = end;
-        this.moves = moves;
+        this.positions = new ArrayList<>();
+        this.positions.add(start);
     }
 
     public Path(Path path, Move nextMove) {
@@ -53,6 +51,9 @@ public class Path {
         this.start = path.start();
         this.end   = new Point(path.end(), nextMove);
         this.moves = moves;
+
+        this.positions = new ArrayList<>();
+        this.positions.add(this.start);
     }
 
     public Point start() {
@@ -61,6 +62,26 @@ public class Path {
 
     public Point end() {
         return this.end;
+    }
+
+    public Point position(int n) throws IndexOutOfBoundsException {
+        if (n < 0)
+            throw new IndexOutOfBoundsException("'n' must not be less than 0");
+        else if (n > this.moves.size())
+            throw new IndexOutOfBoundsException("'n' must not exceed the number of moves");
+
+        int i = this.positions.size();
+        while (i <= n) {
+            if (i > 0) {
+                Point last = this.positions.get(i - 1);
+                Point curr = new Point(last, this.moves.get(i - 1));
+                this.positions.add(curr);
+            } else {
+                this.positions.add(this.start);
+            }
+            i++;
+        }
+        return this.positions.get(n);
     }
 
     public List<Move> moves() {
