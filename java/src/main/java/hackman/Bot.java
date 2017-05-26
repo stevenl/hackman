@@ -70,18 +70,15 @@ public class Bot {
 
         Move move = null;
         if (!myPaths.isEmpty()) {
-            float maxScore = -1;
             Map<Move, Float> moveScores = calculateMoveScores(myPaths);
 //            System.err.println("scores=" + moveScores);
 
-            for (Map.Entry<Move, Float> e : moveScores.entrySet()) {
-                float score = e.getValue();
-                if (score <= maxScore)
-                    continue;
-
-                move = e.getKey();
-                maxScore = score;
-            }
+            // Choose the move with the highest score
+            move = moveScores.entrySet().stream()
+                    .max((e1, e2) -> Float.compare(e1.getValue(), e2.getValue()))
+                    .map(e -> e.getKey())
+                    .orElse(null);
+//            System.err.println("move=" + move);
         }
 
         if (move == null)
