@@ -133,6 +133,18 @@ public class Bot {
 
             paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
 //            if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
+
+            if (paths.isEmpty()) {
+                Set<Point> threats2 = new HashSet<>();
+                threats2.addAll(immediateThreats);
+                threats2.addAll(traps);
+                paths = findShortestPaths(field, origin, targets, threats2, maxMoves);
+//                if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
+            }
+            if (paths.isEmpty()) {
+                paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
+//                if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
+            }
         }
 
         // Fall back on an unsafe route if there is no safe route (if no weapon)
