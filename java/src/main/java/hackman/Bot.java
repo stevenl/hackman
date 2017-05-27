@@ -49,16 +49,14 @@ public class Bot {
      */
     Move doMove(State state) {
         Field field = state.getField();
-        Player me   = state.getMyPlayer();
 
-//        System.err.println("\n" + field);
+        //System.err.println("\n" + field);
 
-        Path path = null;
         List<Path> myPaths  = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
         List<Path> oppPaths = getPaths(state, state.getOpponentPlayer(), state.getMyPlayer());
 
-//        System.err.println("myPath=" + myPaths.get(0));
-//        System.err.println("oppPath=" + oppPaths.get(0));
+        //System.err.println("myPath=" + myPaths.get(0));
+        //System.err.println("oppPath=" + oppPaths.get(0));
 
         // Don't go for the target if the opponent is closer to it
         if (myPaths.size() > 1 && !oppPaths.isEmpty()) {
@@ -72,14 +70,14 @@ public class Bot {
         Move move = null;
         if (!myPaths.isEmpty()) {
             Map<Move, Float> moveScores = calculateMoveScores(myPaths);
-//            System.err.println("scores=" + moveScores);
+            //System.err.println("scores=" + moveScores);
 
             // Choose the move with the highest score
             move = moveScores.entrySet().stream()
                     .max((e1, e2) -> Float.compare(e1.getValue(), e2.getValue()))
                     .map(e -> e.getKey())
                     .orElse(null);
-//            System.err.println("move=" + move);
+            //System.err.println("move=" + move);
         }
 
         if (move == null)
@@ -116,6 +114,9 @@ public class Bot {
             // Get sword since we don't already have one
             targets.addAll(field.getWeaponPositions());
 
+            int maxMoves = 0;
+            if (targets.isEmpty()) maxMoves = 8;
+
             Set<Point> threats = new HashSet<>(field.getEnemyPositions());
             if (b.hasWeapon()) threats.add(field.getPlayerPosition(b.getId()));
 
@@ -127,31 +128,34 @@ public class Bot {
                     .filter(path -> path.nrMoves() == 2)
                     .map(path -> path.position(1))
                     .collect(Collectors.toSet());
-//            System.err.println("immediate=" + immediateThreats);
+            //System.err.println("immediate=" + immediateThreats);
 
             Set<Point> traps = findTraps(field, pathsToThreats);
-//            System.err.println("traps=" + traps);
+            //System.err.println("traps=" + traps);
 
-            Set<Point> avoid = new HashSet<>(threats);
-            avoid.addAll(traps);
-            avoid.addAll(immediateThreats);
+            // Most conservative: Avoid all threats
+            {
+                Set<Point> avoid = new HashSet<>(threats);
+                avoid.addAll(traps);
+                avoid.addAll(immediateThreats);
 
-            int maxMoves = 0;
-            if (targets.isEmpty()) maxMoves = 8;
-
-            paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
-//            if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
-
-            if (paths.isEmpty()) {
-                Set<Point> threats2 = new HashSet<>();
-                threats2.addAll(immediateThreats);
-                threats2.addAll(traps);
-                paths = findShortestPaths(field, origin, targets, threats2, maxMoves);
-//                if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
+                paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
             }
+
+            // Fallback: Avoid immediate threats and traps
+            if (paths.isEmpty()) {
+                Set<Point> avoid = new HashSet<>();
+                avoid.addAll(immediateThreats);
+                avoid.addAll(traps);
+                paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
+            }
+
+            // Fallback: Avoid immediate threats only
             if (paths.isEmpty()) {
                 paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
-//                if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
             }
         }
 
@@ -162,7 +166,7 @@ public class Bot {
             if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
 
             paths = findShortestPaths(field, origin, targets, null, 0);
-//            if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
 
         return paths;
