@@ -119,15 +119,18 @@ public class Bot {
             Set<Point> threats = new HashSet<>(field.getEnemyPositions());
             if (b.hasWeapon()) threats.add(field.getPlayerPosition(b.getId()));
 
+            List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
+
             // Detect threats that are 2 steps away such that they can harm us
             // by moving to the position that we want to move to.
-            List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
             Set<Point> immediateThreats = pathsToThreats.stream()
                     .filter(path -> path.nrMoves() == 2)
                     .map(path -> path.position(1))
                     .collect(Collectors.toSet());
+//            System.err.println("immediate=" + immediateThreats);
 
-            Set<Point> traps = findTraps(field, origin, threats);
+            Set<Point> traps = findTraps(field, pathsToThreats);
+//            System.err.println("traps=" + traps);
 
             Set<Point> avoid = new HashSet<>(threats);
             avoid.addAll(traps);
@@ -165,77 +168,40 @@ public class Bot {
         return paths;
     }
 
-    private Set<Point> findTraps(Field field, Point origin, Set<Point> avoid) {
-        List<Path> toIntersections = new ArrayList<>();
-        Queue<Path> queue  = new LinkedList<>();
-        Set<Point> visited = new HashSet<>();
+    /**
+     * Finds the intersections that can be reached by a bug before you.
+     * If they can, then they can trap you in.
+     *
+     * @param field The game field
+     * @param toThreats A set of paths from you to each threat
+     * @return The set of intersection points where you can be trapped
+     */
+    private Set<Point> findTraps(Field field, List<Path> toThreats) {
+        Set<Point> traps = new HashSet<>();
 
-        queue.add(new Path(origin));
-        visited.add(origin);
+        for (Path path : toThreats) {
+            // Find any intersections between you and the bug
+            boolean seenIntersection = false;
+            for (int i = 1; i <= path.nrMoves(); i++) {
+                Point pos = path.position(i);
+                List<Move> moves = field.getValidMoves(pos);
 
-        // Do a breadth-first search to find the intersections
-        while (!queue.isEmpty()) {
-            Path path = queue.remove();
-            List<Move> validMoves = field.getValidMoves(path.end());
+                // Is it an intersection?
+                if (moves.size() > 2) {
+                    seenIntersection = true;
+                    int movesToIntersection = i;
+                    int threatToIntersection = path.nrMoves() - i;
 
-            // Have we reached an intersection?
-            if (path.nrMoves() > 0 && validMoves.size() > 2) {
-                toIntersections.add(path);
-                continue;
-            }
-
-            for (Move m : validMoves) {
-                Path next = new Path(path, m);
-                Point nextPosition = next.end();
-
-                if (visited.contains(nextPosition))
-                    continue;
-
-                visited.add(nextPosition);
-
-                if (!avoid.contains(nextPosition))
-                    queue.add(next);
-            }
-        }
-
-        // Now find the threat nearest to each intersection
-        // i.e. how many moves before they can trap you in?
-        Map<Point, Path> intersectionPaths = new HashMap<>();
-        for (Path p : toIntersections) {
-            intersectionPaths.put(p.end(), p);
-            queue.add(new Path(p.end())); // start new path from intersection
-        }
-
-        Map<Path, Path> intersectionThreats = new HashMap<>();
-        while (!queue.isEmpty()) {
-            Path path = queue.remove();
-            List<Move> validMoves = field.getValidMoves(path.end());
-
-            for (Move m : validMoves) {
-                Path next = new Path(path, m);
-                Point nextPosition = next.end();
-
-                if (avoid.contains(nextPosition)) {
-                    Path intPath = intersectionPaths.get(path.start());
-                    intersectionThreats.put(intPath, next);
-                    break;
+                    // Can the threat reach the intersection before you?
+                    if (movesToIntersection >= threatToIntersection) {
+                        traps.add(pos);
+                        break;
+                    }
                 }
 
-                if (visited.contains(nextPosition))
-                    continue;
-
-                visited.add(nextPosition);
-                queue.add(next);
-            }
-        }
-
-        Set<Point> traps = new HashSet<>();
-        for (Map.Entry<Path, Path> e : intersectionThreats.entrySet()) {
-            Path intersection = e.getKey();
-            Path trapper = e.getValue();
-
-            if (intersection.nrMoves() >= trapper.nrMoves()) {
-                traps.add(intersection.end());
+                // Has the threat already trapped you in?
+                if (!seenIntersection && i == path.nrMoves())
+                    traps.add(pos);
             }
         }
         return traps;
