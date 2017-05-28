@@ -80,10 +80,7 @@ public class Bot {
             //System.err.println("move=" + move);
         }
 
-        if (move == null)
-            return randomMove(field, field.getMyPosition());
-
-        return move;
+        return move != null ? move : Move.PASS;
     }
 
     private Map<Move, Float> calculateMoveScores(List<Path> paths) {
@@ -104,69 +101,56 @@ public class Bot {
     }
 
     private List<Path> getPaths(State state, Player a, Player b) {
-        Field field = state.getField();
+        Field field  = state.getField();
         Point origin = field.getPlayerPosition(a.getId());
 
+        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
+
+        // Get sword since we don't already have one
+        if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
+
+        int maxMoves = 0;
+        if (targets.isEmpty()) maxMoves = 8;
+
+        Set<Point> threats = new HashSet<>(field.getEnemyPositions());
+        if (!a.hasWeapon() && b.hasWeapon())
+            threats.add(field.getPlayerPosition(b.getId()));
+
+        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
+
+        // Detect threats that are 2 steps away such that they can harm us
+        // by moving to the position that we want to move to.
+        Set<Point> immediateThreats = pathsToThreats.stream()
+                .filter(path -> path.nrMoves() == 2)
+                .map(path -> path.position(1))
+                .collect(Collectors.toSet());
+        //System.err.println("immediate=" + immediateThreats);
+
+        Set<Point> traps = findTraps(field, pathsToThreats);
+        //System.err.println("traps=" + traps);
+
+        // Avoid immediate threats and traps
         List<Path> paths = null;
-        if (!a.hasWeapon()) {
-            Set<Point> targets = new HashSet<>();
-            targets.addAll(field.getSnippetPositions());
-            // Get sword since we don't already have one
-            targets.addAll(field.getWeaponPositions());
+        {
+            Set<Point> avoid = new HashSet<>();
+            avoid.addAll(immediateThreats);
+            avoid.addAll(traps);
+            //System.err.println("avoid=" + avoid);
 
-            int maxMoves = 0;
-            if (targets.isEmpty()) maxMoves = 8;
-
-            Set<Point> threats = new HashSet<>(field.getEnemyPositions());
-            if (b.hasWeapon()) threats.add(field.getPlayerPosition(b.getId()));
-
-            List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
-
-            // Detect threats that are 2 steps away such that they can harm us
-            // by moving to the position that we want to move to.
-            Set<Point> immediateThreats = pathsToThreats.stream()
-                    .filter(path -> path.nrMoves() == 2)
-                    .map(path -> path.position(1))
-                    .collect(Collectors.toSet());
-            //System.err.println("immediate=" + immediateThreats);
-
-            Set<Point> traps = findTraps(field, pathsToThreats);
-            //System.err.println("traps=" + traps);
-
-            // Most conservative: Avoid all threats
-            {
-                Set<Point> avoid = new HashSet<>(threats);
-                avoid.addAll(traps);
-                avoid.addAll(immediateThreats);
-
-                paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
-            }
-
-            // Fallback: Avoid immediate threats and traps
-            if (paths.isEmpty()) {
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(immediateThreats);
-                avoid.addAll(traps);
-                paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
-            }
-
-            // Fallback: Avoid immediate threats only
-            if (paths.isEmpty()) {
-                paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
-            }
+            paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
+            //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
         }
 
-        // Fall back on an unsafe route if there is no safe route (if no weapon)
-        if (paths == null || paths.isEmpty()) {
-            Set<Point> targets = new HashSet<>();
-            targets.addAll(field.getSnippetPositions());
-            if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
-
-            paths = findShortestPaths(field, origin, targets, null, 0);
-            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+        if (paths.isEmpty()) {
+            if (!a.hasWeapon()) {
+                // Fallback: Avoid immediate threats only
+                paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
+            } else {
+                // Fallback: Don't try to avoid threats
+                paths = findShortestPaths(field, origin, targets, null, 0);
+                //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+            }
         }
 
         return paths;
