@@ -50,6 +50,22 @@ public class Field {
         this.weaponPositions  = new ArrayList<>();
     }
 
+    public Field(Field orig) {
+        this();
+
+        this.width            = orig.getWidth();
+        this.height           = orig.getHeight();
+        this.myId             = orig.getMyId();
+        this.opponentId       = orig.getOpponentId();
+
+        this.playerPositions  = new HashMap<>(orig.getPlayerPositions());
+        this.enemyPositions   = new ArrayList<>(orig.getEnemyPositions());
+        this.snippetPositions = new ArrayList<>(orig.getSnippetPositions());
+        this.weaponPositions  = new ArrayList<>(orig.getWeaponPositions());
+
+        this.parseFromString(orig.unparseToString());
+    }
+
     /**
      * Initializes field
      * @throws IllegalStateException: exception
@@ -120,6 +136,19 @@ public class Field {
                 }
             }
         }
+    }
+
+    public String unparseToString() {
+        StringBuilder str = new StringBuilder(this.width * this.height * 2 - 1);
+
+        for (int y = 0; y < this.height; y++) {
+            for (int x = 0; x < this.width; x++) {
+                str.append(this.field[x][y]);
+                if (y != this.height - 1 || x != this.width - 1)
+                    str.append(",");
+            }
+        }
+        return str.toString();
     }
 
     /**
@@ -212,6 +241,26 @@ public class Field {
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public int getMyId() {
+        return this.myId;
+    }
+
+    public int getOpponentId() {
+        return this.opponentId;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public HashMap<Integer, Point> getPlayerPositions() {
+        return this.playerPositions;
     }
 
     public Point getPlayerPosition(int playerId) {

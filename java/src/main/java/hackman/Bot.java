@@ -35,6 +35,7 @@ public class Bot {
         parser.run();
     }
 
+    private Field prevField = null;
     private Random rand;
 
     Bot() {
@@ -48,9 +49,7 @@ public class Bot {
      * @return A Move object
      */
     Move doMove(State state) {
-        Field field = state.getField();
-
-        //System.err.println("\n" + field);
+        //System.err.println("\n" + state.getField());
 
         List<Path> myPaths  = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
         List<Path> oppPaths = getPaths(state, state.getOpponentPlayer(), state.getMyPlayer());
@@ -80,6 +79,7 @@ public class Bot {
             //System.err.println("move=" + move);
         }
 
+        prevField = new Field(state.getField());
         return move != null ? move : Move.PASS;
     }
 
@@ -165,9 +165,16 @@ public class Bot {
      * @return The set of intersection points where you can be trapped
      */
     private Set<Point> findTraps(Field field, List<Path> toThreats) {
-        Set<Point> traps = new HashSet<>();
+        Set<Point> prevThreatPositions = new HashSet<>();
+        if (prevField != null)
+            prevThreatPositions.addAll(prevField.getEnemyPositions());
 
+        Set<Point> traps = new HashSet<>();
         for (Path path : toThreats) {
+            // Is the enemy moving away? It's unlikely he will come back this way
+            if (prevThreatPositions.contains(path.position(path.nrMoves() - 1)))
+                continue;
+
             // Find any intersections between you and the bug
             boolean seenIntersection = false;
             for (int i = 1; i <= path.nrMoves(); i++) {
