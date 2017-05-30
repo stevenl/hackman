@@ -173,31 +173,40 @@ public class Bot {
      * If they can, then they can trap you in.
      *
      * @param field The game field
-     * @param toThreats A set of paths from you to each threat
+     * @param pathsToThreats A set of paths from you to each threat
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps(Field field, List<Path> toThreats, Set<Point> prevThreatPositions) {
+    private Set<Point> findTraps(Field field, List<Path> pathsToThreats, Set<Point> prevThreatPositions) {
         Set<Point> traps = new HashSet<>();
         Map<Point, Integer> intersectionOptions = new HashMap<>();
 
-        for (Path path : toThreats) {
+        for (Path toThreat : pathsToThreats) {
+            int maxMoves = toThreat.nrMoves();
+
             // Is the enemy moving away? It's unlikely he will come back this way
-            if (prevThreatPositions.contains(path.position(path.nrMoves() - 1)))
+            Point penultimatePos = toThreat.position(maxMoves - 1);
+            if (prevThreatPositions.contains(penultimatePos))
                 continue;
 
             // Find any intersections between you and the bug
             Deque<Point> intersectionStack = new ArrayDeque<>();
-            for (int i = 1; i <= path.nrMoves(); i++) {
-                Point pos = path.position(i);
-                List<Move> moves = field.getValidMoves(pos);
+            for (int i = 1; i <= maxMoves; i++) {
+                Point pos = toThreat.position(i);
+
+                // Has the threat already trapped you in?
+                if (i == maxMoves && intersectionStack.isEmpty()) {
+                    traps.add(pos);
+                    break;
+                }
 
                 // Is it an intersection?
-                if (moves.size() > 2) {
+                int nrMoveOptions = field.getValidMoves(pos).size();
+                if (nrMoveOptions > 2) {
                     if (!intersectionOptions.containsKey(pos))
-                        intersectionOptions.put(pos, moves.size() - 1); // don't count the point we come from
+                        intersectionOptions.put(pos, nrMoveOptions - 1); // don't count the point we come from
 
                     int movesToIntersection = i;
-                    int threatToIntersection = path.nrMoves() - i;
+                    int threatToIntersection = maxMoves - i;
 
                     // Can the threat reach the intersection before you?
                     if (movesToIntersection >= threatToIntersection || intersectionOptions.get(pos) <= 1) {
