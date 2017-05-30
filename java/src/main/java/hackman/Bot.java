@@ -131,7 +131,9 @@ public class Bot {
         // by moving to the position that we want to move to.
         Set<Point> prevThreatPositions = getPreviousEnemyPositions();
         Set<Point> immediateThreats = pathsToThreats.stream()
-                .filter(path -> path.nrMoves() == 2 && !prevThreatPositions.contains(path.position(1)))
+                .filter(path ->
+                    path.nrMoves() <= 2 &&
+                    !prevThreatPositions.contains(path.position(1)))
                 .map(path -> path.position(1))
                 .collect(Collectors.toSet());
         //System.err.println("immediate=" + immediateThreats);
