@@ -42,6 +42,15 @@ public class Bot {
         this.rand = new Random();
     }
 
+    Set<Point> getPreviousEnemyPositions() {
+        Set<Point> prevThreatPositions = new HashSet<>();
+        if (this.prevField != null) {
+            List<Point> enemies = this.prevField.getEnemyPositions();
+            prevThreatPositions.addAll(enemies);
+        }
+        return prevThreatPositions;
+    }
+
     /**
      * Does a move action.
      *
@@ -120,13 +129,14 @@ public class Bot {
 
         // Detect threats that are 2 steps away such that they can harm us
         // by moving to the position that we want to move to.
+        Set<Point> prevThreatPositions = getPreviousEnemyPositions();
         Set<Point> immediateThreats = pathsToThreats.stream()
-                .filter(path -> path.nrMoves() == 2)
+                .filter(path -> path.nrMoves() == 2 && !prevThreatPositions.contains(path.position(1)))
                 .map(path -> path.position(1))
                 .collect(Collectors.toSet());
         //System.err.println("immediate=" + immediateThreats);
 
-        Set<Point> traps = findTraps(field, pathsToThreats);
+        Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions);
         //System.err.println("traps=" + traps);
 
         // Avoid immediate threats and traps
@@ -164,11 +174,7 @@ public class Bot {
      * @param toThreats A set of paths from you to each threat
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps(Field field, List<Path> toThreats) {
-        Set<Point> prevThreatPositions = new HashSet<>();
-        if (prevField != null)
-            prevThreatPositions.addAll(prevField.getEnemyPositions());
-
+    private Set<Point> findTraps(Field field, List<Path> toThreats, Set<Point> prevThreatPositions) {
         Set<Point> traps = new HashSet<>();
         for (Path path : toThreats) {
             // Is the enemy moving away? It's unlikely he will come back this way
