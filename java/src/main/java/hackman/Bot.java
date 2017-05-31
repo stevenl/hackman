@@ -88,7 +88,7 @@ public class Bot {
             //System.err.println("move=" + move);
         }
 
-        prevField = new Field(state.getField());
+        this.prevField = new Field(state.getField());
         return move != null ? move : Move.PASS;
     }
 
@@ -150,21 +150,20 @@ public class Bot {
             //System.err.println("avoid=" + avoid);
 
             paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
-            //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
-        }
+            //if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
 
-        if (paths.isEmpty()) {
-            if (!a.hasWeapon()) {
-                // Fallback: Avoid immediate threats only
+            if (a.hasWeapon()) {
+                // Unsafe strategy: Don't try to avoid threats
+                List<Path> unsafePaths = findShortestPaths(field, origin, targets, null, 0);
+                paths.addAll(unsafePaths);
+                //if (!paths.isEmpty()) System.err.println("unsafe=" + unsafePaths.get(0));
+            }
+            else if (paths.isEmpty()) {
+                // Fallback (safe strategy): Avoid immediate threats only
                 paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
-            } else {
-                // Fallback: Don't try to avoid threats
-                paths = findShortestPaths(field, origin, targets, null, 0);
-                //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
             }
         }
-
         return paths;
     }
 

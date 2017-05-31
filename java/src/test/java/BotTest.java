@@ -96,6 +96,17 @@ public class BotTest {
         assertEquals(Move.RIGHT, bot.doMove(state));
     }
 
+    @Test
+    public void dontDetourWithWeapon() {
+        // If we have a weapon, we want to weigh up whether avoiding the bug is worth
+        // it. If it means we take too many extra steps then just kill the bug.
+        this.state.getMyPlayer().setWeapon(true);
+        this.field.parseFromString(".,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,0,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,E,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,E,.,.,x,x,x,C,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,C,.,.,.,C,.,.,x,x,x,E,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,1,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.");
+        assertEquals(Move.DOWN, bot.doMove(state));
+
+        this.state.getMyPlayer().setWeapon(false);
+    }
+
     //@Test
     //public void dontGetTrapped() {
     //    this.field.parseFromString(".,.,.,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,C,.,.,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,0,.,E,.,x,x,x,.,x,.,.,.,.,.,1,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,E,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,C,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.");
