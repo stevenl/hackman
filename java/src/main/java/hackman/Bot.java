@@ -125,7 +125,8 @@ public class Bot {
         if (!a.hasWeapon() && b.hasWeapon())
             threats.add(field.getPlayerPosition(b.getId()));
 
-        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, 0);
+        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, true, 0);
+        //System.err.println("toThreats=" + pathsToThreats);
 
         // Detect threats that are 2 steps away such that they can harm us
         // by moving to the position that we want to move to.
@@ -141,25 +142,26 @@ public class Bot {
         Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions);
         //System.err.println("traps=" + traps);
 
+        Set<Point> avoid = new HashSet<>();
+        avoid.addAll(immediateThreats);
+        avoid.addAll(traps);
+        //System.err.println("avoid=" + avoid);
+
         List<Path> paths = null;
         if (!a.hasWeapon()) {
             // Safe strategy: Avoid immediate threats and traps
-            Set<Point> avoid = new HashSet<>();
-            avoid.addAll(immediateThreats);
-            avoid.addAll(traps);
-            //System.err.println("avoid=" + avoid);
 
-            paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
+            paths = findShortestPaths(field, origin, targets, avoid, true, maxMoves);
             //if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
 
             if (paths.isEmpty()) {
                 // Fallback: Avoid immediate threats only
-                paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
+                paths = findShortestPaths(field, origin, targets, immediateThreats, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
             }
         } else {
             // Unsafe strategy: Don't try to avoid threats
-            paths = findShortestPaths(field, origin, targets, null, 0);
+            paths = findShortestPaths(field, origin, targets, avoid, false, 0);
             //if (!paths.isEmpty()) System.err.println("unsafe=" + unsafePaths.get(1));
         }
         return paths;
@@ -223,7 +225,6 @@ public class Bot {
                                 break;
                             }
                         }
-                        break;
                     }
                     intersectionStack.addFirst(pos);
                 }
@@ -243,25 +244,24 @@ public class Bot {
      * @param avoid The set of positions to avoid (e.g. threats)
      * @return a list of Paths to each of the targets. The list is in increasing order of distance.
      */
-    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid, int maxMoves) {
+    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, int maxMoves) {
         if (avoid == null) avoid = new HashSet<>();
         if (maxMoves <= 0) maxMoves = Integer.MAX_VALUE;
 
-        List<Path> paths   = new ArrayList<>();
-        Queue<Path> queue  = new LinkedList<>();
-        Set<Point> visited = new HashSet<>();
+        List<Path> paths          = new ArrayList<>();
+        Queue<Path> queue         = new LinkedList<>();
+        Queue<Integer> encounters = new LinkedList<>();
+        Set<Point> visited        = new HashSet<>();
 
         queue.add(new Path(origin));
+        encounters.add(0);
         visited.add(origin);
-
-        // Ensure that paths that encounter threats are not counted
-        // in which case alternative routes to the targets will be found
-        visited.addAll(avoid);
 
         // Do a breadth-first search
         search:
         while (!queue.isEmpty()) {
             Path path = queue.remove();
+            int unavoided = encounters.remove();
             List<Move> validMoves = field.getValidMoves(path.end());
 
             for (Move m : validMoves) {
@@ -279,11 +279,19 @@ public class Bot {
                 if (visited.contains(nextPosition))
                     continue;
 
+                if (avoid.contains(nextPosition)) {
+                    if (!strictMode && unavoided == 0)
+                        unavoided++;
+                    else
+                        continue;
+                }
+
                 if (targets.contains(nextPosition))
                     paths.add(next);
 
                 visited.add(nextPosition);
                 queue.add(next);
+                encounters.add(unavoided);
             }
         }
         return paths;
