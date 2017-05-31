@@ -141,9 +141,9 @@ public class Bot {
         Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions);
         //System.err.println("traps=" + traps);
 
-        // Avoid immediate threats and traps
         List<Path> paths = null;
-        {
+        if (!a.hasWeapon()) {
+            // Safe strategy: Avoid immediate threats and traps
             Set<Point> avoid = new HashSet<>();
             avoid.addAll(immediateThreats);
             avoid.addAll(traps);
@@ -152,17 +152,15 @@ public class Bot {
             paths = findShortestPaths(field, origin, targets, avoid, maxMoves);
             //if (!paths.isEmpty()) System.err.println("safe=" + paths.get(0));
 
-            if (a.hasWeapon()) {
-                // Unsafe strategy: Don't try to avoid threats
-                List<Path> unsafePaths = findShortestPaths(field, origin, targets, null, 0);
-                paths.addAll(unsafePaths);
-                //if (!paths.isEmpty()) System.err.println("unsafe=" + unsafePaths.get(0));
-            }
-            else if (paths.isEmpty()) {
-                // Fallback (safe strategy): Avoid immediate threats only
+            if (paths.isEmpty()) {
+                // Fallback: Avoid immediate threats only
                 paths = findShortestPaths(field, origin, targets, immediateThreats, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
             }
+        } else {
+            // Unsafe strategy: Don't try to avoid threats
+            paths = findShortestPaths(field, origin, targets, null, 0);
+            //if (!paths.isEmpty()) System.err.println("unsafe=" + unsafePaths.get(1));
         }
         return paths;
     }
