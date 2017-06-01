@@ -183,6 +183,11 @@ public class Bot {
         for (Path toThreat : pathsToThreats) {
             int maxMoves = toThreat.nrMoves();
 
+            // These have already been detected as immediate threats and we want to
+            // avoid double counting them because they are positioned differently
+            if (maxMoves <= 2)
+                continue;
+
             // Is the enemy moving away? It's unlikely he will come back this way
             Point penultimatePos = toThreat.position(maxMoves - 1);
             if (prevThreatPositions.contains(penultimatePos))
