@@ -21,6 +21,7 @@ package hackman;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * hackman.Bot
@@ -206,17 +207,20 @@ public class Bot {
                 }
 
                 // Is it an intersection?
-                int nrMoveOptions = field.getValidMoves(pos).size();
-                if (nrMoveOptions > 2) {
+                // (Don't count the point we come from)
+                int nrMoveOptions = field.getValidMoves(pos).size() - 1;
+                if (nrMoveOptions > 1) {
                     if (!intersectionOptions.containsKey(pos))
-                        intersectionOptions.put(pos, nrMoveOptions - 1); // don't count the point we come from
+                        intersectionOptions.put(pos, nrMoveOptions);
+                    else
+                        nrMoveOptions = intersectionOptions.get(pos);
 
                     int movesToIntersection = i;
                     int threatToIntersection = maxMoves - i;
 
                     // Can the threat reach the intersection before you?
-                    if (movesToIntersection >= threatToIntersection || intersectionOptions.get(pos) <= 1) {
-                        //System.err.println("trap2=" + pos);
+                    if (movesToIntersection >= threatToIntersection) {
+                        //System.err.println("trap2[" + movesToIntersection + ">=" + threatToIntersection + "]=" + pos);
                         traps.add(pos);
 
                         // If all paths from an intersection lead to traps then
@@ -234,6 +238,18 @@ public class Bot {
                                 break;
                             }
                         }
+                    }
+                    else if (nrMoveOptions == 1) {
+                        Point closedIntersection = IntStream.rangeClosed(i + 1, maxMoves)
+                                .mapToObj(j -> toThreat.position(j))
+                                .filter(p -> field.getValidMoves(p).size() > 2)
+                                .findFirst()
+                                .orElse(null);
+                        if (closedIntersection == null && !traps.contains(closedIntersection)) {
+                            //System.err.println("trap4=" + pos);
+                            traps.add(pos);
+                        }
+                        break;
                     }
                     intersectionStack.addFirst(pos);
                 }
