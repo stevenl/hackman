@@ -74,6 +74,7 @@ public class Bot {
             if (myPath.end().equals(oppPath.end()) && myPath.nrMoves() > oppPath.nrMoves())
                 myPaths.remove(0);
         }
+        //System.err.println("myPath2=" + myPaths.get(0));
 
         Move move = null;
         if (!myPaths.isEmpty()) {
@@ -162,7 +163,7 @@ public class Bot {
         } else {
             // Unsafe strategy: Don't try to avoid threats
             paths = findShortestPaths(field, origin, targets, avoid, false, 0);
-            //if (!paths.isEmpty()) System.err.println("unsafe=" + unsafePaths.get(1));
+            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
         return paths;
     }
@@ -194,6 +195,7 @@ public class Bot {
 
                 // Has the threat already trapped you in?
                 if (i == maxMoves && intersectionStack.isEmpty()) {
+                    //System.err.println("trap1=" + pos);
                     traps.add(pos);
                     break;
                 }
@@ -209,6 +211,7 @@ public class Bot {
 
                     // Can the threat reach the intersection before you?
                     if (movesToIntersection >= threatToIntersection || intersectionOptions.get(pos) <= 1) {
+                        //System.err.println("trap2=" + pos);
                         traps.add(pos);
 
                         // If all paths from an intersection lead to traps then
@@ -220,6 +223,7 @@ public class Bot {
                             intersectionOptions.put(lastIntersection, options - 1);
 
                             if (options == 1) {
+                                //System.err.println("trap3=" + pos);
                                 traps.add(lastIntersection);
                             } else {
                                 break;
