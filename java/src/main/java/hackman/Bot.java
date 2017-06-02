@@ -128,15 +128,21 @@ public class Bot {
             threats.add(field.getPlayerPosition(b.getId()));
 
         List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, true, 0);
+
+        // Is the enemy moving away? It's unlikely he will come back this way
+        Set<Point> prevThreatPositions = getPreviousEnemyPositions();
+        pathsToThreats = pathsToThreats.stream()
+                .filter(toThreat -> {
+                    Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
+                    return !prevThreatPositions.contains(penultimatePos);
+                })
+                .collect(Collectors.toList());
         //System.err.println("toThreats=" + pathsToThreats);
 
-        // Detect threats that are 2 steps away such that they can harm us
+        // Threats that are 2 moves away can still harm us
         // by moving to the position that we want to move to.
-        Set<Point> prevThreatPositions = getPreviousEnemyPositions();
         Set<Point> immediateThreats = pathsToThreats.stream()
-                .filter(path ->
-                    path.nrMoves() <= 2 &&
-                    !prevThreatPositions.contains(path.position(1)))
+                .filter(path -> path.nrMoves() <= 2)
                 .map(path -> path.position(1))
                 .collect(Collectors.toSet());
         //System.err.println("immediate=" + immediateThreats);
@@ -186,13 +192,7 @@ public class Bot {
 
             // These have already been detected as immediate threats and we want to
             // avoid double counting them because they are positioned differently
-            if (maxMoves <= 2)
-                continue;
-
-            // Is the enemy moving away? It's unlikely he will come back this way
-            Point penultimatePos = toThreat.position(maxMoves - 1);
-            if (prevThreatPositions.contains(penultimatePos))
-                continue;
+            if (maxMoves <= 2) continue;
 
             // Find any intersections between you and the bug
             Deque<Point> intersectionStack = new ArrayDeque<>();
