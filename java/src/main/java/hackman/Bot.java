@@ -121,7 +121,7 @@ public class Bot {
                 }
             }
 
-            Move move = myPath.moves().get(0);
+            Move move = myPath.move(0);
             float newScore = moveScores.getOrDefault(move, 0.0f);
             newScore += score;
 
@@ -331,10 +331,10 @@ public class Bot {
             int unavoided = encounters.remove();
             List<Move> validMoves = field.getValidMoves(path.end());
 
-            for (Move m : validMoves) {
-                Path next = new Path(path, m);
+            for (Move nextMove : validMoves) {
+                Path nextPath = new Path(path, nextMove);
 
-                if (next.nrMoves() > maxMoves) {
+                if (nextPath.nrMoves() > maxMoves) {
                     if (targets.isEmpty()) {
                         paths.add(path);
                         paths.addAll(queue);
@@ -342,7 +342,7 @@ public class Bot {
                     break search;
                 }
 
-                Point nextPosition = next.end();
+                Point nextPosition = nextPath.end();
                 if (visited.contains(nextPosition))
                     continue;
 
@@ -354,10 +354,10 @@ public class Bot {
                 }
 
                 if (targets.contains(nextPosition))
-                    paths.add(next);
+                    paths.add(nextPath);
 
                 visited.add(nextPosition);
-                queue.add(next);
+                queue.add(nextPath);
                 encounters.add(unavoided);
             }
         }

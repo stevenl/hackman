@@ -35,25 +35,30 @@ public class Path {
     private List<Move> moves;
     private List<Point> positions;
 
+    private Path() {
+        this.start = null;
+        this.end   = null;
+        this.moves = new ArrayList<>();
+        this.positions = new ArrayList<>();
+    }
+
     public Path(Point start) {
+        this();
         this.start = start;
         this.end   = start;
-        this.moves = new ArrayList<>();
-
-        this.positions = new ArrayList<>();
         this.positions.add(start);
     }
 
     public Path(Path path, Move nextMove) {
-        List<Move> moves = new ArrayList<>(path.moves());
-        moves.add(nextMove);
+        this();
+        this.start = path.start;
+        this.end   = new Point(path.end, nextMove);
 
-        this.start = path.start();
-        this.end   = new Point(path.end(), nextMove);
-        this.moves = moves;
+        this.moves.addAll(path.moves);
+        this.moves.add(nextMove);
 
-        this.positions = new ArrayList<>();
-        this.positions.add(this.start);
+        this.positions.addAll(path.positions);
+        this.positions.add(this.end);
     }
 
     public Point start() {
@@ -84,8 +89,8 @@ public class Path {
         return this.positions.get(n);
     }
 
-    public List<Move> moves() {
-        return this.moves;
+    public Move move(int n) {
+        return this.moves.get(n);
     }
 
     public int nrMoves() {
