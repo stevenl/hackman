@@ -159,9 +159,9 @@ public class Bot {
         //System.err.println("toThreats=" + pathsToThreats);
 
         // Revise threats after filter
-        threats = pathsToThreats.stream()
-                .map(toThreat -> toThreat.end())
-                .collect(Collectors.toSet());
+        //threats = pathsToThreats.stream()
+        //        .map(toThreat -> toThreat.end())
+        //        .collect(Collectors.toSet());
         //System.err.println("threats=" + threats);
 
         // Threats that are 2 moves away can still harm us
@@ -172,6 +172,12 @@ public class Bot {
                 .collect(Collectors.toSet());
         //System.err.println("immediate=" + immediateThreats);
 
+        Set<Point> nearbyThreats = pathsToThreats.stream()
+                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
+                .map(path -> path.end())
+                .collect(Collectors.toSet());
+        //System.err.println("nearby=" + nearbyThreats);
+
         Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions);
         //System.err.println("traps=" + traps);
 
@@ -180,8 +186,8 @@ public class Bot {
             // Safe strategy: Avoid all threats and traps
             {
                 Set<Point> avoid = new HashSet<>();
-                avoid.addAll(threats);
                 avoid.addAll(immediateThreats);
+                avoid.addAll(nearbyThreats);
                 avoid.addAll(traps);
                 //System.err.println("avoid1=" + avoid);
 
