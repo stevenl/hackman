@@ -67,19 +67,11 @@ public class Bot {
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
 
-        // Don't go for the target if the opponent is closer to it
-        if (myPaths.size() > 1 && !oppPaths.isEmpty()) {
-            Path myPath  = myPaths.get(0);
-            Path oppPath = oppPaths.get(0);
-
-            if (myPath.end().equals(oppPath.end()) && myPath.nrMoves() > oppPath.nrMoves())
-                myPaths.remove(0);
-        }
-        //System.err.println("myPath2=" + myPaths.get(0));
+        //System.err.println("myPaths=" + myPaths);
 
         Move move = null;
         if (!myPaths.isEmpty()) {
-            Map<Move, Float> moveScores = calculateMoveScores(myPaths);
+            Map<Move, Float> moveScores = calculateMoveScores(state.getField(), myPaths, oppPaths);
             //System.err.println("scores=" + moveScores);
 
             // Choose the move with the highest score
@@ -94,19 +86,46 @@ public class Bot {
         return move != null ? move : Move.PASS;
     }
 
-    private Map<Move, Float> calculateMoveScores(List<Path> paths) {
+    private Map<Move, Float> calculateMoveScores(Field field, List<Path> myPaths, List<Path> oppPaths) {
+        Map<Point, Path> oppPathsByTarget = new HashMap<>();
+        Map<Point, Integer> oppPathRank = new HashMap<>();
+        int i = 1;
+        for (Path oppPath : oppPaths) {
+            Point target = oppPath.end();
+            oppPathsByTarget.put(target, oppPath);
+            oppPathRank.put(target, i++);
+        }
+
+        Point origin = field.getMyPosition();
+        Set<Point> targets = new HashSet<>();
+        targets.add(field.getOpponentPosition());
+        List<Path> toOpponent = findShortestPaths(field, origin, targets, null, true, 0);
+        int nrMovesToOpponent = toOpponent.get(0).nrMoves();
+
         Map<Move, Float> moveScores = new HashMap<>();
-        for (Path p : paths) {
-            Move move = p.moves().get(0);
+        for (Path myPath : myPaths) {
+            Point target = myPath.end();
+            Path oppPath = oppPathsByTarget.get(target);
 
-            float score;
-            if (moveScores.containsKey(move))
-                score = moveScores.get(move);
-            else
-                score = 0;
+            float score = 1.0f / myPath.nrMoves();
 
-            score += 1.0 / p.nrMoves();
-            moveScores.put(move, score);
+            if (oppPath != null) {
+                // Cut our losses: Ditch targets that opponent can get to first
+                if (oppPath.nrMoves() < myPath.nrMoves()) {
+                    int pathRank = oppPathRank.get(target);
+                    score *= 1.0f - (1.0f / pathRank);
+                }
+                // Don't let him have any: Prefer targets nearer to opponent
+                else if (oppPath.nrMoves() < nrMovesToOpponent) {
+                    score *= 1.4;
+                }
+            }
+
+            Move move = myPath.moves().get(0);
+            float newScore = moveScores.getOrDefault(move, 0.0f);
+            newScore += score;
+
+            moveScores.put(move, newScore);
         }
         return moveScores;
     }
