@@ -181,7 +181,7 @@ public class Bot {
                 .collect(Collectors.toSet());
         //System.err.println("nearby=" + nearbyThreats);
 
-        Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions);
+        Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions, targets);
         //System.err.println("traps=" + traps);
 
         List<Path> paths = null;
@@ -234,7 +234,7 @@ public class Bot {
      * @param pathsToThreats A set of paths from you to each threat
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps(Field field, List<Path> pathsToThreats, Set<Point> prevThreatPositions) {
+    private Set<Point> findTraps(Field field, List<Path> pathsToThreats, Set<Point> prevThreatPositions, Set<Point> targets) {
         Set<Point> traps = new HashSet<>();
         Map<Point, Integer> intersectionOptions = new HashMap<>();
 
@@ -260,7 +260,7 @@ public class Bot {
                 // Is it an intersection?
                 // (Don't count the point we come from)
                 int nrMoveOptions = field.getValidMoves(pos).size() - 1;
-                if (nrMoveOptions > 1) {
+                if (nrMoveOptions > 1 || targets.contains(pos)) {
                     if (!intersectionOptions.containsKey(pos))
                         intersectionOptions.put(pos, nrMoveOptions);
                     else
