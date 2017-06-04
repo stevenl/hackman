@@ -138,8 +138,11 @@ public class Bot {
 
         // Get sword since we don't already have one
         if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
+        //System.err.println("targets=" + targets);
 
         int maxMoves = 0;
+        // Don't be a sitting duck while there are no targets:
+        // Get any safe paths within 8 moves
         if (targets.isEmpty()) maxMoves = 8;
 
         Set<Point> threats = new HashSet<>(field.getEnemyPositions());
@@ -217,7 +220,7 @@ public class Bot {
             avoid.addAll(immediateThreats);
             avoid.addAll(traps);
 
-            paths = findShortestPaths(field, origin, targets, avoid, false, 0);
+            paths = findShortestPaths(field, origin, targets, avoid, false, maxMoves);
             //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
         return paths;
