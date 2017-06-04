@@ -100,7 +100,7 @@ public class Bot {
         Set<Point> targets = new HashSet<>();
         targets.add(field.getOpponentPosition());
         List<Path> toOpponent = findShortestPaths(field, origin, targets, null, true, 0);
-        int nrMovesToOpponent = toOpponent.get(0).nrMoves();
+        int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();
         for (Path myPath : myPaths) {
