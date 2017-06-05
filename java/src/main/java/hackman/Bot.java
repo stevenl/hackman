@@ -213,6 +213,11 @@ public class Bot {
                 paths = findShortestPaths(field, origin, targets, immediateThreats, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
             }
+
+            if (paths.isEmpty()) {
+                paths = findShortestPaths(field, origin, targets, immediateThreats, false, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("safe4=" + paths.get(0));
+            }
         }
         else {
             // With weapon: Allowed to avoid one threat
