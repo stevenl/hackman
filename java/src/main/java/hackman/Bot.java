@@ -150,6 +150,7 @@ public class Bot {
             threats.add(field.getPlayerPosition(b.getId()));
 
         List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, true, 0);
+        //System.err.println("toThreats=" + pathsToThreats);
 
         // Is the enemy moving away? It's unlikely he will come back this way
         Set<Point> prevThreatPositions = getPreviousEnemyPositions();

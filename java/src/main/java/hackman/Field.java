@@ -19,8 +19,7 @@
 
 package hackman;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * hackman.Field
@@ -31,6 +30,11 @@ import java.util.HashMap;
  * @author Jim van Eeden - jim@riddles.io
  */
 public class Field {
+
+    private static final Set<Point> BUG_ENTRANCE_1 = new HashSet<>(Arrays.asList(
+            new Point(9, 6), new Point(9, 7), new Point(8, 7)));
+    private static final Set<Point> BUG_ENTRANCE_2 = new HashSet<>(Arrays.asList(
+            new Point(10, 6), new Point(10, 7), new Point(11, 7)));
 
     private int width;
     private int height;
@@ -220,6 +224,14 @@ public class Field {
      * @return True if point is valid to stand on, false otherwise
      */
     public boolean isPointValid(Point p) {
+        // Special handling for the bugs source (which is marked as a wall)
+        if (BUG_ENTRANCE_1.contains(p)) {
+            return this.enemyPositions.stream().anyMatch(e -> BUG_ENTRANCE_1.contains(e));
+        }
+        else if (BUG_ENTRANCE_2.contains(p)) {
+            return this.enemyPositions.stream().anyMatch(e -> BUG_ENTRANCE_2.contains(e));
+        }
+
         int x = p.x;
         int y = p.y;
 
