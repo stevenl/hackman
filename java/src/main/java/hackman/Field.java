@@ -42,30 +42,30 @@ public class Field {
     private int opponentId;
 
     private String[][] field = null;
-    private HashMap<Integer, Point> playerPositions; // <id, position>
-    private ArrayList<Point> enemyPositions;
-    private ArrayList<Point> snippetPositions;
-    private ArrayList<Point> weaponPositions;
+    private Map<Integer, Point> playerPositions; // <id, position>
+    private Set<Point> enemyPositions;
+    private Set<Point> snippetPositions;
+    private Set<Point> weaponPositions;
 
     public Field() {
         this.playerPositions  = new HashMap<>();
-        this.enemyPositions   = new ArrayList<>();
-        this.snippetPositions = new ArrayList<>();
-        this.weaponPositions  = new ArrayList<>();
+        this.enemyPositions   = new HashSet<>();
+        this.snippetPositions = new HashSet<>();
+        this.weaponPositions  = new HashSet<>();
     }
 
     public Field(Field orig) {
         this();
 
-        this.width            = orig.getWidth();
-        this.height           = orig.getHeight();
-        this.myId             = orig.getMyId();
-        this.opponentId       = orig.getOpponentId();
+        this.width      = orig.width;
+        this.height     = orig.height;
+        this.myId       = orig.myId;
+        this.opponentId = orig.opponentId;
 
-        this.playerPositions  = new HashMap<>(orig.getPlayerPositions());
-        this.enemyPositions   = new ArrayList<>(orig.getEnemyPositions());
-        this.snippetPositions = new ArrayList<>(orig.getSnippetPositions());
-        this.weaponPositions  = new ArrayList<>(orig.getWeaponPositions());
+        this.playerPositions .putAll(orig.getPlayerPositions());
+        this.enemyPositions  .addAll(orig.getEnemyPositions());
+        this.snippetPositions.addAll(orig.getSnippetPositions());
+        this.weaponPositions .addAll(orig.getWeaponPositions());
 
         this.parseFromString(orig.unparseToString());
     }
@@ -200,8 +200,8 @@ public class Field {
      * player outside the field or inside a wall
      * @return A list of valid moves
      */
-    public ArrayList<Move> getValidMoves(Point p) {
-        ArrayList<Move> validMoves = new ArrayList<>();
+    public Set<Move> getValidMoves(Point p) {
+        Set<Move> validMoves = new HashSet<>();
         int x = p.x;
         int y = p.y;
 
@@ -255,23 +255,7 @@ public class Field {
         this.height = height;
     }
 
-    public int getMyId() {
-        return this.myId;
-    }
-
-    public int getOpponentId() {
-        return this.opponentId;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    public int getHeight() {
-        return this.height;
-    }
-
-    public HashMap<Integer, Point> getPlayerPositions() {
+    public Map<Integer, Point> getPlayerPositions() {
         return this.playerPositions;
     }
 
@@ -287,19 +271,15 @@ public class Field {
         return this.playerPositions.get(this.opponentId);
     }
 
-    public ArrayList<Point> getEnemyPositions() {
+    public Set<Point> getEnemyPositions() {
         return this.enemyPositions;
     }
 
-    public ArrayList<Point> getSnippetPositions() {
+    public Set<Point> getSnippetPositions() {
         return this.snippetPositions;
     }
 
-    public ArrayList<Point> getWeaponPositions() {
+    public Set<Point> getWeaponPositions() {
         return this.weaponPositions;
-    }
-
-    public int getNrArtifacts() {
-        return this.snippetPositions.size() + this.weaponPositions.size();
     }
 }

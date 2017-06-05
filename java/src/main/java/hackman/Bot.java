@@ -46,7 +46,7 @@ public class Bot {
     Set<Point> getPreviousEnemyPositions() {
         Set<Point> prevThreatPositions = new HashSet<>();
         if (this.prevField != null) {
-            List<Point> enemies = this.prevField.getEnemyPositions();
+            Set<Point> enemies = this.prevField.getEnemyPositions();
             prevThreatPositions.addAll(enemies);
         }
         return prevThreatPositions;
@@ -344,7 +344,7 @@ public class Bot {
         while (!queue.isEmpty()) {
             Path path = queue.remove();
             int unavoided = encounters.remove();
-            List<Move> validMoves = field.getValidMoves(path.end());
+            Set<Move> validMoves = field.getValidMoves(path.end());
 
             for (Move nextMove : validMoves) {
                 Path nextPath = new Path(path, nextMove);
@@ -385,7 +385,7 @@ public class Bot {
      * @return A move decided at random
      */
     private Move randomMove(Field field, Point origin) {
-        ArrayList<Move> validMoves = field.getValidMoves(origin);
+        List<Move> validMoves = new ArrayList<>(field.getValidMoves(origin));
 
         if (validMoves.size() <= 0) return Move.PASS; // No valid moves
 
