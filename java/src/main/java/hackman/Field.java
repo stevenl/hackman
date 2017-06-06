@@ -316,7 +316,7 @@ public class Field {
             Set<Move> validMoves = this.getValidMoves(path.end());
 
             for (Move nextMove : validMoves) {
-                Path nextPath = new Path(path, nextMove);
+                Path nextPath = new Path(path, nextMove, this);
 
                 if (nextPath.nrMoves() > maxMoves) {
                     if (targets.isEmpty()) {

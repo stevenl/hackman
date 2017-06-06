@@ -19,8 +19,7 @@
 
 package hackman;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * hackman.Path
@@ -34,12 +33,15 @@ public class Path {
     private Point end;
     private List<Move> moves;
     private List<Point> positions;
+    private Set<Point> intersections;
 
     private Path() {
         this.start = null;
         this.end   = null;
-        this.moves = new ArrayList<>();
-        this.positions = new ArrayList<>();
+
+        this.moves         = new ArrayList<>();
+        this.positions     = new ArrayList<>();
+        this.intersections = new HashSet<>();
     }
 
     public Path(Point start) {
@@ -49,16 +51,23 @@ public class Path {
         this.positions.add(start);
     }
 
-    public Path(Path path, Move nextMove) {
+    public Path(Path path, Move nextMove, Field field) {
         this();
+
         this.start = path.start;
         this.end   = new Point(path.end, nextMove);
+
+        if (!field.isPointValid(this.end))
+            throw new RuntimeException("Invalid point: " + this.end);
 
         this.moves.addAll(path.moves);
         this.moves.add(nextMove);
 
         this.positions.addAll(path.positions);
         this.positions.add(this.end);
+
+        boolean isIntersection = field.getValidMoves(this.end).size() > 2;
+        if (isIntersection) this.intersections.add(this.end);
     }
 
     public Point start() {
@@ -69,7 +78,7 @@ public class Path {
         return this.end;
     }
 
-    public Point position(int n) throws IndexOutOfBoundsException {
+    public Point position(int n) {
         if (n < 0)
             throw new IndexOutOfBoundsException("'n' must not be less than 0");
         else if (n > this.moves.size())
