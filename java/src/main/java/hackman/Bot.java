@@ -99,7 +99,7 @@ public class Bot {
         Point origin = field.getMyPosition();
         Set<Point> targets = new HashSet<>();
         targets.add(field.getOpponentPosition());
-        List<Path> toOpponent = findShortestPaths(field, origin, targets, null, true, 0);
+        List<Path> toOpponent = field.findShortestPaths(origin, targets, null, true, 0);
         int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();
@@ -149,7 +149,7 @@ public class Bot {
         if (!a.hasWeapon() && b.hasWeapon())
             threats.add(field.getPlayerPosition(b.getId()));
 
-        List<Path> pathsToThreats = findShortestPaths(field, origin, threats, null, true, 0);
+        List<Path> pathsToThreats = field.findShortestPaths(origin, threats, null, true, 0);
         //System.err.println("toThreats=" + pathsToThreats);
 
         // Is the enemy moving away? It's unlikely he will come back this way
@@ -195,7 +195,7 @@ public class Bot {
                 avoid.addAll(traps);
                 //System.err.println("avoid1=" + avoid);
 
-                paths = findShortestPaths(field, origin, targets, avoid, true, maxMoves);
+                paths = field.findShortestPaths(origin, targets, avoid, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe1=" + paths.get(0));
             }
 
@@ -205,18 +205,18 @@ public class Bot {
                 avoid.addAll(immediateThreats);
                 avoid.addAll(traps);
 
-                paths = findShortestPaths(field, origin, targets, avoid, true, maxMoves);
+                paths = field.findShortestPaths(origin, targets, avoid, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
             }
 
             // Fallback: Avoid immediate threats only
             if (paths.isEmpty()) {
-                paths = findShortestPaths(field, origin, targets, immediateThreats, true, maxMoves);
+                paths = field.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
             }
 
             if (paths.isEmpty()) {
-                paths = findShortestPaths(field, origin, targets, immediateThreats, false, maxMoves);
+                paths = field.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe4=" + paths.get(0));
             }
         }
@@ -226,7 +226,7 @@ public class Bot {
             avoid.addAll(immediateThreats);
             avoid.addAll(traps);
 
-            paths = findShortestPaths(field, origin, targets, avoid, false, maxMoves);
+            paths = field.findShortestPaths(origin, targets, avoid, false, maxMoves);
             //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
         return paths;
@@ -313,70 +313,6 @@ public class Bot {
             }
         }
         return traps;
-    }
-
-    /**
-     * Does a breadth-first search to find an optimal path from the given
-     * origin to each of the targets. The resulting paths will never pass
-     * through any of the points to avoid.
-     *
-     * @param field The game field
-     * @param origin The starting position (e.g. my current position)
-     * @param targets The set of end positions to aim for (e.g. snippet positions)
-     * @param avoid The set of positions to avoid (e.g. threats)
-     * @return a list of Paths to each of the targets. The list is in increasing order of distance.
-     */
-    private List<Path> findShortestPaths(Field field, Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, int maxMoves) {
-        if (avoid == null) avoid = new HashSet<>();
-        if (maxMoves <= 0) maxMoves = Integer.MAX_VALUE;
-
-        List<Path> paths          = new ArrayList<>();
-        Queue<Path> queue         = new LinkedList<>();
-        Queue<Integer> encounters = new LinkedList<>();
-        Set<Point> visited        = new HashSet<>();
-
-        queue.add(new Path(origin));
-        encounters.add(0);
-        visited.add(origin);
-
-        // Do a breadth-first search
-        search:
-        while (!queue.isEmpty()) {
-            Path path = queue.remove();
-            int unavoided = encounters.remove();
-            Set<Move> validMoves = field.getValidMoves(path.end());
-
-            for (Move nextMove : validMoves) {
-                Path nextPath = new Path(path, nextMove);
-
-                if (nextPath.nrMoves() > maxMoves) {
-                    if (targets.isEmpty()) {
-                        paths.add(path);
-                        paths.addAll(queue);
-                    }
-                    break search;
-                }
-
-                Point nextPosition = nextPath.end();
-                if (visited.contains(nextPosition))
-                    continue;
-
-                if (avoid.contains(nextPosition)) {
-                    if (!strictMode && unavoided == 0)
-                        unavoided++;
-                    else
-                        continue;
-                }
-
-                if (targets.contains(nextPosition))
-                    paths.add(nextPath);
-
-                visited.add(nextPosition);
-                queue.add(nextPath);
-                encounters.add(unavoided);
-            }
-        }
-        return paths;
     }
 
     /**

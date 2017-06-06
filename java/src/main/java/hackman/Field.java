@@ -282,4 +282,70 @@ public class Field {
     public Set<Point> getWeaponPositions() {
         return this.weaponPositions;
     }
+
+    /**
+     * Does a breadth-first search to find an optimal path from the given
+     * origin to each of the targets. The resulting paths will never pass
+     * through any of the points to avoid.
+     *
+     * @param origin The starting position (e.g. my current position)
+     * @param targets The set of end positions to aim for (e.g. snippet positions)
+     * @param avoid The set of positions to avoid (e.g. threats)
+     * @param strictMode If false, then we allow one encounter with a point that should be avoided
+     * @param maxMoves The maximum number of moves to make before terminating the search
+     * @return a list of Paths to each of the targets. The list is in increasing order of distance.
+     */
+    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, int maxMoves) {
+        if (avoid == null) avoid = new HashSet<>();
+        if (maxMoves <= 0) maxMoves = Integer.MAX_VALUE;
+
+        List<Path> paths          = new ArrayList<>();
+        Queue<Path> queue         = new LinkedList<>();
+        Queue<Integer> encounters = new LinkedList<>();
+        Set<Point> visited        = new HashSet<>();
+
+        queue.add(new Path(origin));
+        encounters.add(0);
+        visited.add(origin);
+
+        // Do a breadth-first search
+        search:
+        while (!queue.isEmpty()) {
+            Path path = queue.remove();
+            int unavoided = encounters.remove();
+            Set<Move> validMoves = this.getValidMoves(path.end());
+
+            for (Move nextMove : validMoves) {
+                Path nextPath = new Path(path, nextMove);
+
+                if (nextPath.nrMoves() > maxMoves) {
+                    if (targets.isEmpty()) {
+                        paths.add(path);
+                        paths.addAll(queue);
+                    }
+                    break search;
+                }
+
+                Point nextPosition = nextPath.end();
+                if (visited.contains(nextPosition))
+                    continue;
+
+                if (avoid.contains(nextPosition)) {
+                    if (!strictMode && unavoided == 0)
+                        unavoided++;
+                    else
+                        continue;
+                }
+
+                if (targets.contains(nextPosition))
+                    paths.add(nextPath);
+
+                visited.add(nextPosition);
+                queue.add(nextPath);
+                encounters.add(unavoided);
+            }
+        }
+        return paths;
+    }
+
 }
