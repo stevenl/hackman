@@ -66,6 +66,8 @@ public class Path {
         this.positions.addAll(path.positions);
         this.positions.add(this.end);
 
+        this.intersections.addAll(path.intersections);
+
         boolean isIntersection = field.getValidMoves(this.end).size() > 2;
         if (isIntersection) this.intersections.add(this.end);
     }
@@ -104,6 +106,10 @@ public class Path {
 
     public int nrMoves() {
         return this.moves.size();
+    }
+
+    public int nrIntersections() {
+        return this.intersections.size();
     }
 
     @Override

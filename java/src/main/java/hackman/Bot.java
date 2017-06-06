@@ -251,6 +251,10 @@ public class Bot {
             // avoid double counting them because they are positioned differently
             if (maxMoves <= 2) continue;
 
+            // Don't be too cautious: far-away threats may move somewhere else
+            if (toThreat.nrMoves() > 10 && toThreat.nrIntersections() > 3)
+                continue;
+
             // Find any intersections between you and the bug
             Deque<Point> intersectionStack = new ArrayDeque<>();
             for (int i = 1; i <= maxMoves; i++) {

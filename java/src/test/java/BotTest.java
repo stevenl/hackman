@@ -184,6 +184,14 @@ public class BotTest {
         assertEquals(Move.LEFT, bot.doMove(state));
     }
 
+    @Test
+    public void ignoreDistantThreats() {
+        // Don't count distant threats because they may move somewhere else
+        // and cease to be threats.
+        this.field.parseFromString(".,.,.,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,C,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,C,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,1,x,x,x,.,x,x,x,x,x,x,0,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.");
+        assertEquals(Move.UP, bot.doMove(state));
+    }
+
     //@Test
     //public void boilerplate() {
     //    this.field.parseFromString("");
