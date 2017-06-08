@@ -1,5 +1,5 @@
-/*
- * Copyright 2016 riddles.io (developers@riddles.io)
+/**
+ * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -19,130 +19,32 @@
 
 package hackman;
 
-import java.util.HashMap;
+import java.util.*;
 
-/**
- * hackman.State
- *
- * This class stores all settings of the game and the information about the
- * current state of the game. When calling this in Bot.doMove, you can trust that this state
- * has been update to current game state (because updates are sent before action request).
- *
- * @author Jim van Eeden - jim@riddles.io
- */
-public class State {
+public class State extends Field {
 
-    private int MAX_TIMEBANK;
-    private int TIME_PER_MOVE;
-    private int MAX_ROUNDS;
+    private int roundId;
+    private List<Player> players;
 
-    private int roundNumber;
-    private int timebank;
-    private int myId;
-    private int opponentId;
-    private String myName;
-    private Player myPlayer;
-    private Player opponentPlayer;
-    private HashMap<String, Player> players;
+    State(int roundId, String field, List<Player> players, Game game) {
+        super(game.getFieldWidth(), game.getFieldHeight(), field);
 
-    private Field field;
+        this.roundId = roundId;
+        this.players = new ArrayList<>(2);
 
-    State() {
-        this.myId = this.opponentId = -1;
-        this.field = new Field();
-        this.players = new HashMap<>();
-    }
+        for (Player player : players) {
+            int index = player.getId() == game.getMyId() ? 0 : 1;
+            this.players.add(index, player);
 
-    public void setTimebank(int value) {
-        this.timebank = value;
-    }
-
-    public void setMaxTimebank(int value) {
-        this.MAX_TIMEBANK = value;
-    }
-
-    public void setTimePerMove(int value) {
-        this.TIME_PER_MOVE = value;
-    }
-
-    public void setMyId(int id) {
-        this.myId = id;
-    }
-
-    public void setOpponentId(int id) {
-        this.opponentId = id;
-    }
-
-    public void setMyName(String myName) {
-        this.myName = myName;
-    }
-
-    private void setPlayers() {
-        for (Player player : this.players.values()) {
-            if (player.getName().equals(this.myName))
-                this.myPlayer = player;
-            else
-                this.opponentPlayer = player;
+            player.setPosition(this);
         }
     }
 
-    public void setMaxRounds(int value) {
-        this.MAX_ROUNDS = value;
+    Player getMyPlayer() {
+        return this.players.get(0);
     }
 
-    public void setRoundNumber(int roundNumber) {
-        this.roundNumber = roundNumber;
-    }
-
-    public int getTimebank() {
-        return this.timebank;
-    }
-
-    public int getRoundNumber() {
-        return this.roundNumber;
-    }
-
-    public HashMap<String, Player> getPlayers() {
-        return this.players;
-    }
-
-    public Field getField() {
-        return this.field;
-    }
-
-    public int getMyId() {
-        return this.myId;
-    }
-
-    public int getOpponentId() {
-        return this.opponentId;
-    }
-
-    public String getMyName() {
-        return this.myName;
-    }
-
-    public Player getMyPlayer() {
-        if (this.myPlayer == null)
-            setPlayers();
-        return this.myPlayer;
-    }
-
-    public Player getOpponentPlayer() {
-        if (this.opponentPlayer == null)
-            setPlayers();
-        return this.opponentPlayer;
-    }
-
-    public int getMaxTimebank() {
-        return this.MAX_TIMEBANK;
-    }
-
-    public int getTimePerMove() {
-        return this.TIME_PER_MOVE;
-    }
-
-    public int getMaxRound() {
-        return this.MAX_ROUNDS;
+    Player getOpponentPlayer() {
+        return this.players.get(1);
     }
 }

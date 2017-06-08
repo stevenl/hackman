@@ -29,7 +29,7 @@ import java.util.*;
  *
  * @author Jim van Eeden - jim@riddles.io
  */
-public class Field {
+class Field {
 
     private static final Set<Point> BUG_ENTRANCE_1 = new HashSet<>(Arrays.asList(
             new Point(9, 6), new Point(9, 7), new Point(8, 7)));
@@ -47,34 +47,26 @@ public class Field {
     private Set<Point> snippetPositions;
     private Set<Point> weaponPositions;
 
-    public Field() {
+    private Field() {
         this.playerPositions  = new HashMap<>();
         this.enemyPositions   = new HashSet<>();
         this.snippetPositions = new HashSet<>();
         this.weaponPositions  = new HashSet<>();
     }
 
-    public Field(Field orig) {
+    Field(int width, int height, String field) {
         this();
+        this.width  = width;
+        this.height = height;
 
-        this.width      = orig.width;
-        this.height     = orig.height;
-        this.myId       = orig.myId;
-        this.opponentId = orig.opponentId;
-
-        this.playerPositions .putAll(orig.getPlayerPositions());
-        this.enemyPositions  .addAll(orig.getEnemyPositions());
-        this.snippetPositions.addAll(orig.getSnippetPositions());
-        this.weaponPositions .addAll(orig.getWeaponPositions());
-
-        this.parseFromString(orig.unparseToString());
+        initField();
+        this.parseFromString(field);
     }
 
     /**
      * Initializes field
-     * @throws IllegalStateException: exception
      */
-    public void initField() throws IllegalStateException {
+    void initField() {
         if (this.width == 0)
             throw new IllegalStateException("Field 'width' has not been set");
         if (this.height == 0)
@@ -87,7 +79,7 @@ public class Field {
     /**
      * Clears the field
      */
-    public void clearField() {
+    private void clearField() {
         for (int y = 0; y < this.height; y++) {
             for (int x = 0; x < this.width; x++) {
                 this.field[x][y] = "";
@@ -105,7 +97,7 @@ public class Field {
      * Also stores several interesting points.
      * @param input String input from the engine
      */
-    public void parseFromString(String input) {
+    void parseFromString(String input) {
         if (this.field == null)
             initField();
         else
@@ -142,7 +134,7 @@ public class Field {
         }
     }
 
-    public String unparseToString() {
+    private String unparseToString() {
         StringBuilder str = new StringBuilder(this.width * this.height * 2 - 1);
 
         for (int y = 0; y < this.height; y++) {
@@ -159,6 +151,7 @@ public class Field {
      * Returns a string representation of the field that can be printed
      * @return String representation of the current field
      */
+    @Override
     public String toString() {
         StringBuilder output = new StringBuilder();
 

@@ -28,18 +28,23 @@ package hackman;
  */
 public class Player {
 
-    private int id = -1;
+    private int id;
     private String name;
     private int snippets;
     private boolean hasWeapon;
     private boolean isParalyzed;
+    private Point position = null;
 
-    public Player(String playerName) {
-        this.name = playerName;
+    Player(int id, String name, int snippets, boolean hasWeapon, boolean isParalyzed) {
+        this.id          = id;
+        this.name        = name;
+        this.snippets    = snippets;
+        this.hasWeapon   = hasWeapon;
+        this.isParalyzed = isParalyzed;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    void setPosition(Field field) {
+        this.position = field.getPlayerPosition(this.id);
     }
 
     public int getId() {
@@ -54,26 +59,20 @@ public class Player {
         return this.snippets;
     }
 
-    public void setSnippets(int snippets) {
-        this.snippets = snippets;
-    }
-
     public boolean hasWeapon() {
         return this.hasWeapon;
-    }
-
-    public void setWeapon(boolean hasWeapon) {
-        this.hasWeapon = hasWeapon;
     }
 
     public boolean isParalyzed() {
         return this.isParalyzed;
     }
 
-    public void setParalyzed(boolean isParalyzed) {
-        this.isParalyzed = isParalyzed;
+    public void setWeapon(boolean hasWeapon) {
+        this.hasWeapon = hasWeapon;
     }
 
-//    @Override
-//    public String toString() { return this.id + "," + this.name; }
+    @Override
+    public String toString() {
+        return String.format("hackman.Player[%d] at %s", this.id, this.position);
+    }
 }

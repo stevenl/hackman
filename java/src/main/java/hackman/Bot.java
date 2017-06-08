@@ -31,12 +31,7 @@ import java.util.stream.IntStream;
 
 public class Bot {
 
-    public static void main(String[] args) {
-        Parser parser = new Parser(new Bot());
-        parser.run();
-    }
-
-    private Field prevField = null;
+    private Field prevState = null;
     private Random rand;
 
     Bot() {
@@ -45,8 +40,8 @@ public class Bot {
 
     Set<Point> getPreviousEnemyPositions() {
         Set<Point> prevThreatPositions = new HashSet<>();
-        if (this.prevField != null) {
-            Set<Point> enemies = this.prevField.getEnemyPositions();
+        if (this.prevState != null) {
+            Set<Point> enemies = this.prevState.getEnemyPositions();
             prevThreatPositions.addAll(enemies);
         }
         return prevThreatPositions;
@@ -68,10 +63,11 @@ public class Bot {
         //System.err.println("oppPath=" + oppPaths.get(0));
 
         //System.err.println("myPaths=" + myPaths);
+        //System.err.println("oppPaths=" + oppPaths);
 
         Move move = null;
         if (!myPaths.isEmpty()) {
-            Map<Move, Float> moveScores = calculateMoveScores(state.getField(), myPaths, oppPaths);
+            Map<Move, Float> moveScores = calculateMoveScores(state, myPaths, oppPaths);
             //System.err.println("scores=" + moveScores);
 
             // Choose the move with the highest score
@@ -82,11 +78,11 @@ public class Bot {
             //System.err.println("move=" + move);
         }
 
-        this.prevField = new Field(state.getField());
+        this.prevState = state;
         return move != null ? move : Move.PASS;
     }
 
-    private Map<Move, Float> calculateMoveScores(Field field, List<Path> myPaths, List<Path> oppPaths) {
+    private Map<Move, Float> calculateMoveScores(State state, List<Path> myPaths, List<Path> oppPaths) {
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
         int i = 1;
@@ -96,10 +92,10 @@ public class Bot {
             oppPathRank.put(target, i++);
         }
 
-        Point origin = field.getMyPosition();
+        Point origin = state.getMyPosition();
         Set<Point> targets = new HashSet<>();
-        targets.add(field.getOpponentPosition());
-        List<Path> toOpponent = field.findShortestPaths(origin, targets, null, true, 0);
+        targets.add(state.getOpponentPosition());
+        List<Path> toOpponent = state.findShortestPaths(origin, targets, null, true, 0);
         int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();
@@ -131,13 +127,12 @@ public class Bot {
     }
 
     private List<Path> getPaths(State state, Player a, Player b) {
-        Field field  = state.getField();
-        Point origin = field.getPlayerPosition(a.getId());
+        Point origin = state.getPlayerPosition(a.getId());
 
-        Set<Point> targets = new HashSet<>(field.getSnippetPositions());
+        Set<Point> targets = new HashSet<>(state.getSnippetPositions());
 
         // Get sword since we don't already have one
-        if (!a.hasWeapon()) targets.addAll(field.getWeaponPositions());
+        if (!a.hasWeapon()) targets.addAll(state.getWeaponPositions());
         //System.err.println("targets=" + targets);
 
         int maxMoves = 0;
@@ -145,11 +140,11 @@ public class Bot {
         // Get any safe paths within 8 moves
         if (targets.isEmpty()) maxMoves = 8;
 
-        Set<Point> threats = new HashSet<>(field.getEnemyPositions());
+        Set<Point> threats = new HashSet<>(state.getEnemyPositions());
         if (!a.hasWeapon() && b.hasWeapon())
-            threats.add(field.getPlayerPosition(b.getId()));
+            threats.add(state.getPlayerPosition(b.getId()));
 
-        List<Path> pathsToThreats = field.findShortestPaths(origin, threats, null, true, 0);
+        List<Path> pathsToThreats = state.findShortestPaths(origin, threats, null, true, 0);
         //System.err.println("toThreats=" + pathsToThreats);
 
         // Is the enemy moving away? It's unlikely he will come back this way
@@ -182,7 +177,7 @@ public class Bot {
                 .collect(Collectors.toSet());
         //System.err.println("nearby=" + nearbyThreats);
 
-        Set<Point> traps = findTraps(field, pathsToThreats, prevThreatPositions, targets);
+        Set<Point> traps = findTraps(state, pathsToThreats, prevThreatPositions, targets);
         //System.err.println("traps=" + traps);
 
         List<Path> paths = null;
@@ -195,7 +190,7 @@ public class Bot {
                 avoid.addAll(traps);
                 //System.err.println("avoid1=" + avoid);
 
-                paths = field.findShortestPaths(origin, targets, avoid, true, maxMoves);
+                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe1=" + paths.get(0));
             }
 
@@ -205,18 +200,18 @@ public class Bot {
                 avoid.addAll(immediateThreats);
                 avoid.addAll(traps);
 
-                paths = field.findShortestPaths(origin, targets, avoid, true, maxMoves);
+                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
             }
 
             // Fallback: Avoid immediate threats only
             if (paths.isEmpty()) {
-                paths = field.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
+                paths = state.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
             }
 
             if (paths.isEmpty()) {
-                paths = field.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
+                paths = state.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("safe4=" + paths.get(0));
             }
         }
@@ -226,7 +221,7 @@ public class Bot {
             avoid.addAll(immediateThreats);
             avoid.addAll(traps);
 
-            paths = field.findShortestPaths(origin, targets, avoid, false, maxMoves);
+            paths = state.findShortestPaths(origin, targets, avoid, false, maxMoves);
             //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
         }
         return paths;
@@ -236,11 +231,11 @@ public class Bot {
      * Finds the intersections that can be reached by a bug before you.
      * If they can, then they can trap you in.
      *
-     * @param field The game field
+     * @param state The game field
      * @param pathsToThreats A set of paths from you to each threat
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps(Field field, List<Path> pathsToThreats, Set<Point> prevThreatPositions, Set<Point> targets) {
+    private Set<Point> findTraps(State state, List<Path> pathsToThreats, Set<Point> prevThreatPositions, Set<Point> targets) {
         Set<Point> traps = new HashSet<>();
         Map<Point, Integer> intersectionOptions = new HashMap<>();
 
@@ -269,7 +264,7 @@ public class Bot {
 
                 // Is it an intersection?
                 // (Don't count the point we come from)
-                int nrMoveOptions = field.getValidMoves(pos).size() - 1;
+                int nrMoveOptions = state.getValidMoves(pos).size() - 1;
                 if (nrMoveOptions > 1 || targets.contains(pos)) {
                     if (!intersectionOptions.containsKey(pos))
                         intersectionOptions.put(pos, nrMoveOptions);
@@ -303,7 +298,7 @@ public class Bot {
                     else if (nrMoveOptions == 1) {
                         Point closedIntersection = IntStream.rangeClosed(i + 1, maxMoves)
                                 .mapToObj(j -> toThreat.position(j))
-                                .filter(p -> field.getValidMoves(p).size() > 2)
+                                .filter(p -> state.getValidMoves(p).size() > 2)
                                 .findFirst()
                                 .orElse(null);
                         if (closedIntersection == null && !traps.contains(closedIntersection)) {
@@ -321,11 +316,11 @@ public class Bot {
 
     /**
      * Returns a random but valid Move
-     * @param field The game field
+     * @param state The game field
      * @return A move decided at random
      */
-    private Move randomMove(Field field, Point origin) {
-        List<Move> validMoves = new ArrayList<>(field.getValidMoves(origin));
+    private Move randomMove(State state, Point origin) {
+        List<Move> validMoves = new ArrayList<>(state.getValidMoves(origin));
 
         if (validMoves.size() <= 0) return Move.PASS; // No valid moves
 
