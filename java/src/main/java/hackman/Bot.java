@@ -92,9 +92,9 @@ public class Bot {
             oppPathRank.put(target, i++);
         }
 
-        Point origin = state.getMyPosition();
+        Point origin = state.getMyPlayer().getPosition();
         Set<Point> targets = new HashSet<>();
-        targets.add(state.getOpponentPosition());
+        targets.add(state.getOpponentPlayer().getPosition());
         List<Path> toOpponent = state.findShortestPaths(origin, targets, null, true, 0);
         int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
 
@@ -127,7 +127,7 @@ public class Bot {
     }
 
     private List<Path> getPaths(State state, Player a, Player b) {
-        Point origin = state.getPlayerPosition(a.getId());
+        Point origin = a.getPosition();
 
         Set<Point> targets = new HashSet<>(state.getSnippetPositions());
 
@@ -142,7 +142,7 @@ public class Bot {
 
         Set<Point> threats = new HashSet<>(state.getEnemyPositions());
         if (!a.hasWeapon() && b.hasWeapon())
-            threats.add(state.getPlayerPosition(b.getId()));
+            threats.add(b.getPosition());
 
         List<Path> pathsToThreats = state.findShortestPaths(origin, threats, null, true, 0);
         //System.err.println("toThreats=" + pathsToThreats);

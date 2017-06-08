@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 riddles.io (developers@riddles.io)
+ * Modifications copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -25,6 +26,7 @@ package hackman;
  * Stores all information about a player
  *
  * @author Jim van Eeden - jim@riddles.io
+ * @author Steven Lee - stevenwh.lee@gmail.com
  */
 public class Player {
 
@@ -43,10 +45,6 @@ public class Player {
         this.isParalyzed = isParalyzed;
     }
 
-    void setPosition(Field field) {
-        this.position = field.getPlayerPosition(this.id);
-    }
-
     public int getId() {
         return this.id;
     }
@@ -63,12 +61,20 @@ public class Player {
         return this.hasWeapon;
     }
 
+    public void setWeapon(boolean hasWeapon) {
+        this.hasWeapon = hasWeapon;
+    }
+
     public boolean isParalyzed() {
         return this.isParalyzed;
     }
 
-    public void setWeapon(boolean hasWeapon) {
-        this.hasWeapon = hasWeapon;
+    public Point getPosition() {
+        return this.position;
+    }
+
+    void setPosition(Point position) {
+        this.position = position;
     }
 
     @Override

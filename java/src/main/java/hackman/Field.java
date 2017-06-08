@@ -38,10 +38,8 @@ class Field {
 
     private int width;
     private int height;
-    private int myId;
-    private int opponentId;
-
     private String[][] field = null;
+
     private Map<Integer, Point> playerPositions; // <id, position>
     private Set<Point> enemyPositions;
     private Set<Point> snippetPositions;
@@ -58,51 +56,33 @@ class Field {
         this();
         this.width  = width;
         this.height = height;
+        this.field  = new String[this.width][this.height];
 
-        initField();
         this.parseFromString(field);
-    }
-
-    /**
-     * Initializes field
-     */
-    void initField() {
-        if (this.width == 0)
-            throw new IllegalStateException("Field 'width' has not been set");
-        if (this.height == 0)
-            throw new IllegalStateException("Field 'height' has not been set");
-
-        this.field = new String[this.width][this.height];
-        clearField();
     }
 
     /**
      * Clears the field
      */
-    private void clearField() {
-        for (int y = 0; y < this.height; y++) {
-            for (int x = 0; x < this.width; x++) {
-                this.field[x][y] = "";
-            }
-        }
-
-        this.playerPositions.clear();
-        this.enemyPositions.clear();
-        this.snippetPositions.clear();
-        this.weaponPositions.clear();
-    }
+    //private void clearField() {
+    //    for (int y = 0; y < this.height; y++) {
+    //        for (int x = 0; x < this.width; x++) {
+    //            this.field[x][y] = "";
+    //        }
+    //    }
+    //
+    //    this.playerPositions.clear();
+    //    this.enemyPositions.clear();
+    //    this.snippetPositions.clear();
+    //    this.weaponPositions.clear();
+    //}
 
     /**
      * Parses input string from the engine and stores it in this.field.
      * Also stores several interesting points.
      * @param input String input from the engine
      */
-    void parseFromString(String input) {
-        if (this.field == null)
-            initField();
-        else
-            clearField();
-
+    private void parseFromString(String input) {
         String[] cells = input.split(",");
 
         for (int y = 0; y < this.height; y++) {
@@ -134,18 +114,18 @@ class Field {
         }
     }
 
-    private String unparseToString() {
-        StringBuilder str = new StringBuilder(this.width * this.height * 2 - 1);
-
-        for (int y = 0; y < this.height; y++) {
-            for (int x = 0; x < this.width; x++) {
-                str.append(this.field[x][y]);
-                if (y != this.height - 1 || x != this.width - 1)
-                    str.append(",");
-            }
-        }
-        return str.toString();
-    }
+    //private String unparseToString() {
+    //    StringBuilder str = new StringBuilder(this.width * this.height * 2 - 1);
+    //
+    //    for (int y = 0; y < this.height; y++) {
+    //        for (int x = 0; x < this.width; x++) {
+    //            str.append(this.field[x][y]);
+    //            if (y != this.height - 1 || x != this.width - 1)
+    //                str.append(",");
+    //        }
+    //    }
+    //    return str.toString();
+    //}
 
     /**
      * Returns a string representation of the field that can be printed
@@ -232,36 +212,8 @@ class Field {
                 !this.field[x][y].contains("x");
     }
 
-    public void setMyId(int id) {
-        this.myId = id;
-    }
-
-    public void setOpponentId(int id) {
-        this.opponentId = id;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
-    public Map<Integer, Point> getPlayerPositions() {
-        return this.playerPositions;
-    }
-
-    public Point getPlayerPosition(int playerId) {
+    Point getPlayerPosition(int playerId) {
         return playerPositions.get(playerId);
-    }
-
-    public Point getMyPosition() {
-        return this.playerPositions.get(this.myId);
-    }
-
-    public Point getOpponentPosition() {
-        return this.playerPositions.get(this.opponentId);
     }
 
     public Set<Point> getEnemyPositions() {
@@ -340,5 +292,4 @@ class Field {
         }
         return paths;
     }
-
 }

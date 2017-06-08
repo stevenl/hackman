@@ -33,18 +33,19 @@ public class State extends Field {
         this.players = new ArrayList<>(2);
 
         for (Player player : players) {
-            int index = player.getId() == game.getMyId() ? 0 : 1;
-            this.players.add(index, player);
+            int playerId = player.getId();
+            player.setPosition(this.getPlayerPosition(playerId));
 
-            player.setPosition(this);
+            int index = playerId == game.getMyId() ? 0 : 1;
+            this.players.add(index, player);
         }
     }
 
-    Player getMyPlayer() {
+    public Player getMyPlayer() {
         return this.players.get(0);
     }
 
-    Player getOpponentPlayer() {
+    public Player getOpponentPlayer() {
         return this.players.get(1);
     }
 }
