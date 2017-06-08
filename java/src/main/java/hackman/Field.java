@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 riddles.io (developers@riddles.io)
+ * Modifications copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@ import java.util.*;
  * contains methods to perform calculations about the field
  *
  * @author Jim van Eeden - jim@riddles.io
+ * @author Steven Lee - stevenwh.lee@gmail.com
  */
 class Field {
 
@@ -62,24 +64,9 @@ class Field {
     }
 
     /**
-     * Clears the field
-     */
-    //private void clearField() {
-    //    for (int y = 0; y < this.height; y++) {
-    //        for (int x = 0; x < this.width; x++) {
-    //            this.field[x][y] = "";
-    //        }
-    //    }
-    //
-    //    this.playerPositions.clear();
-    //    this.enemyPositions.clear();
-    //    this.snippetPositions.clear();
-    //    this.weaponPositions.clear();
-    //}
-
-    /**
      * Parses input string from the engine and stores it in this.field.
      * Also stores several interesting points.
+     *
      * @param input String input from the engine
      */
     private void parseFromString(String input) {
@@ -114,64 +101,28 @@ class Field {
         }
     }
 
-    //private String unparseToString() {
-    //    StringBuilder str = new StringBuilder(this.width * this.height * 2 - 1);
-    //
-    //    for (int y = 0; y < this.height; y++) {
-    //        for (int x = 0; x < this.width; x++) {
-    //            str.append(this.field[x][y]);
-    //            if (y != this.height - 1 || x != this.width - 1)
-    //                str.append(",");
-    //        }
-    //    }
-    //    return str.toString();
-    //}
+    Point getPlayerPosition(int playerId) {
+        return playerPositions.get(playerId);
+    }
 
-    /**
-     * Returns a string representation of the field that can be printed
-     * @return String representation of the current field
-     */
-    @Override
-    public String toString() {
-        StringBuilder output = new StringBuilder();
+    public Set<Point> getEnemyPositions() {
+        return this.enemyPositions;
+    }
 
-        // x-axis labels
-        output.append("    ");
-        for (int x = 0; x < this.width; x++) {
-            // for readability, skip every 2nd label when values are 2-digits
-            String s = (x < 10 || x % 2 == 1) ? String.format("%2d", x) : "  ";
-            output.append(s);
-        }
-        output.append("\n");
+    public Set<Point> getSnippetPositions() {
+        return this.snippetPositions;
+    }
 
-        // top border
-        output.append("    ");
-        for (int x = 0; x < this.width; x++)
-            output.append("--");
-        output.append("-\n");
-
-        for (int y = 0; y < this.height; y++) {
-            output.append(String.format("%2d |", y)); // y-axis labels & left border
-
-            for (int x = 0; x < this.width; x++) {
-                output.append(" " + this.field[x][y]);
-            }
-            output.append(" |\n"); // right border
-        }
-
-        // bottom border
-        output.append("    ");
-        for (int x = 0; x < this.width; x++)
-            output.append("--");
-        output.append("-\n");
-
-        return output.toString();
+    public Set<Point> getWeaponPositions() {
+        return this.weaponPositions;
     }
 
     /**
      * Return a list of valid moves for my bot, i.e. moves does not bring
      * player outside the field or inside a wall
-     * @return A list of valid moves
+     *
+     * @param p The point of origin
+     * @return A list of valid moves from the given point
      */
     public Set<Move> getValidMoves(Point p) {
         Set<Move> validMoves = new HashSet<>();
@@ -193,7 +144,8 @@ class Field {
 
     /**
      * Returns whether a point on the field is valid to stand on.
-     * @param p Point to test
+     *
+     * @param p A point to test
      * @return True if point is valid to stand on, false otherwise
      */
     public boolean isPointValid(Point p) {
@@ -212,33 +164,17 @@ class Field {
                 !this.field[x][y].contains("x");
     }
 
-    Point getPlayerPosition(int playerId) {
-        return playerPositions.get(playerId);
-    }
-
-    public Set<Point> getEnemyPositions() {
-        return this.enemyPositions;
-    }
-
-    public Set<Point> getSnippetPositions() {
-        return this.snippetPositions;
-    }
-
-    public Set<Point> getWeaponPositions() {
-        return this.weaponPositions;
-    }
-
     /**
      * Does a breadth-first search to find an optimal path from the given
      * origin to each of the targets. The resulting paths will never pass
      * through any of the points to avoid.
      *
-     * @param origin The starting position (e.g. my current position)
-     * @param targets The set of end positions to aim for (e.g. snippet positions)
-     * @param avoid The set of positions to avoid (e.g. threats)
+     * @param origin     The starting position (e.g. my current position)
+     * @param targets    The set of end positions to aim for (e.g. snippet positions)
+     * @param avoid      The set of positions to avoid (e.g. threats)
      * @param strictMode If false, then we allow one encounter with a point that should be avoided
-     * @param maxMoves The maximum number of moves to make before terminating the search
-     * @return a list of Paths to each of the targets. The list is in increasing order of distance.
+     * @param maxMoves   The maximum number of moves to make before terminating the search
+     * @return A list of Paths to each of the targets. The list is in increasing order of distance.
      */
     public List<Path> findShortestPaths(Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, int maxMoves) {
         if (avoid == null) avoid = new HashSet<>();
@@ -291,5 +227,47 @@ class Field {
             }
         }
         return paths;
+    }
+
+    /**
+     * Returns a string representation of the field that can be printed
+     *
+     * @return String representation of this field
+     */
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+
+        // x-axis labels
+        output.append("    ");
+        for (int x = 0; x < this.width; x++) {
+            // for readability, skip every 2nd label when values are 2-digits
+            String s = (x < 10 || x % 2 == 1) ? String.format("%2d", x) : "  ";
+            output.append(s);
+        }
+        output.append("\n");
+
+        // top border
+        output.append("    ");
+        for (int x = 0; x < this.width; x++)
+            output.append("--");
+        output.append("-\n");
+
+        for (int y = 0; y < this.height; y++) {
+            output.append(String.format("%2d |", y)); // y-axis labels & left border
+
+            for (int x = 0; x < this.width; x++) {
+                output.append(" " + this.field[x][y]);
+            }
+            output.append(" |\n"); // right border
+        }
+
+        // bottom border
+        output.append("    ");
+        for (int x = 0; x < this.width; x++)
+            output.append("--");
+        output.append("-\n");
+
+        return output.toString();
     }
 }

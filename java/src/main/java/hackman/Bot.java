@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 riddles.io (developers@riddles.io)
+ * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -26,26 +26,14 @@ import java.util.stream.IntStream;
 /**
  * hackman.Bot
  *
+ * Decides how the bot should move
+ *
  * @author Steven Lee - stevenwh.lee@gmail.com
  */
 
 public class Bot {
 
     private Field prevState = null;
-    private Random rand;
-
-    Bot() {
-        this.rand = new Random();
-    }
-
-    Set<Point> getPreviousEnemyPositions() {
-        Set<Point> prevThreatPositions = new HashSet<>();
-        if (this.prevState != null) {
-            Set<Point> enemies = this.prevState.getEnemyPositions();
-            prevThreatPositions.addAll(enemies);
-        }
-        return prevThreatPositions;
-    }
 
     /**
      * Does a move action.
@@ -54,7 +42,7 @@ public class Bot {
      * @return A Move object
      */
     Move doMove(State state) {
-        //System.err.println("\n" + state.getField());
+        //System.err.println("\n" + state);
 
         List<Path> myPaths  = getPaths(state, state.getMyPlayer(), state.getOpponentPlayer());
         List<Path> oppPaths = getPaths(state, state.getOpponentPlayer(), state.getMyPlayer());
@@ -227,6 +215,15 @@ public class Bot {
         return paths;
     }
 
+    private Set<Point> getPreviousEnemyPositions() {
+        Set<Point> prevThreatPositions = new HashSet<>();
+        if (this.prevState != null) {
+            Set<Point> enemies = this.prevState.getEnemyPositions();
+            prevThreatPositions.addAll(enemies);
+        }
+        return prevThreatPositions;
+    }
+
     /**
      * Finds the intersections that can be reached by a bug before you.
      * If they can, then they can trap you in.
@@ -312,20 +309,5 @@ public class Bot {
             }
         }
         return traps;
-    }
-
-    /**
-     * Returns a random but valid Move
-     * @param state The game field
-     * @return A move decided at random
-     */
-    private Move randomMove(State state, Point origin) {
-        List<Move> validMoves = new ArrayList<>(state.getValidMoves(origin));
-
-        if (validMoves.size() <= 0) return Move.PASS; // No valid moves
-
-        int random = rand.nextInt(validMoves.size());
-
-        return validMoves.get(random);
     }
 }
