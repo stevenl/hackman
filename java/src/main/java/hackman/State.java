@@ -24,28 +24,50 @@ import java.util.*;
 public class State extends Field {
 
     private int roundId;
-    private List<Player> players;
+    private int myId;
+    private int oppId;
+    private Map<Integer, Player> players; // id : player
+    private State prevState;
 
-    State(int roundId, String field, List<Player> players, Game game) {
+    State(int roundId, String field, List<Player> players, State prevState, Game game) {
         super(game.getFieldWidth(), game.getFieldHeight(), field);
 
-        this.roundId = roundId;
-        this.players = new ArrayList<>(2);
+        this.roundId   = roundId;
+        this.prevState = prevState;
+        this.players   = new HashMap<>(2);
 
         for (Player player : players) {
             int playerId = player.getId();
             player.setPosition(this.getPlayerPosition(playerId));
 
-            int index = playerId == game.getMyId() ? 0 : 1;
-            this.players.add(index, player);
+            if (playerId == game.getMyId())
+                this.myId = playerId;
+            else
+                this.oppId = playerId;
+
+            this.players.put(playerId, player);
         }
     }
 
+    public Player getPlayer(int playerId) {
+        return this.players.get(playerId);
+    }
+
     public Player getMyPlayer() {
-        return this.players.get(0);
+        return this.players.get(this.myId);
     }
 
     public Player getOpponentPlayer() {
-        return this.players.get(1);
+        return this.players.get(this.oppId);
+    }
+
+    public Set<Point> getPreviousEnemyPositions() {
+        Set<Point> prevEnemyPositions = new HashSet<>();
+
+        if (this.prevState != null) {
+            Set<Point> enemies = this.prevState.getEnemyPositions();
+            prevEnemyPositions.addAll(enemies);
+        }
+        return prevEnemyPositions;
     }
 }

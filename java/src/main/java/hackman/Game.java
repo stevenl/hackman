@@ -94,7 +94,7 @@ public class Game {
                     this.timebank = Integer.parseInt(parts[2]);
 
                     State state = parseUpdates(updates);
-                    this.states.add(state);
+                    this.states.addFirst(state);
                     this.updates.clear();
 
                     Move move = this.bot.doMove(state);
@@ -163,7 +163,7 @@ public class Game {
         int roundId  = Integer.parseInt(roundData.get("round"));
         String field = roundData.get("field");
 
-        return new State(roundId, field, players, this);
+        return new State(roundId, field, players, this.states.peekFirst(), this);
     }
 
     @Override
