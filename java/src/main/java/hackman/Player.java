@@ -93,7 +93,6 @@ public class Player {
         if (!this.hasWeapon)
             targets.addAll(state.getWeaponPositions());
 
-        //System.err.println("targets=" + targets);
         return targets;
     }
 
@@ -101,6 +100,7 @@ public class Player {
         Point origin = this.getPosition();
 
         Set<Point> targets = this.getTargets(state);
+        //System.err.println("[" + this.id + "] targets=" + targets);
 
         int maxMoves = 0;
         // Don't be a sitting duck while there are no targets:
@@ -121,16 +121,16 @@ public class Player {
                 .filter(path -> path.nrMoves() <= 2)
                 .map(path -> path.position(1))
                 .collect(Collectors.toSet());
-        //System.err.println("immediate=" + immediateThreats);
+        //System.err.println("[" + this.id + "] immediate=" + immediateThreats);
 
         Set<Point> nearbyThreats = pathsToThreats.stream()
                 .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
                 .map(path -> path.end())
                 .collect(Collectors.toSet());
-        //System.err.println("nearby=" + nearbyThreats);
+        //System.err.println("[" + this.id + "] nearby=" + nearbyThreats);
 
         Set<Point> traps = findTraps(state, pathsToThreats, targets);
-        //System.err.println("traps=" + traps);
+        //System.err.println("[" + this.id + "] traps=" + traps);
 
         List<Path> paths = null;
         if (!this.hasWeapon) {
@@ -140,10 +140,10 @@ public class Player {
                 avoid.addAll(immediateThreats);
                 avoid.addAll(nearbyThreats);
                 avoid.addAll(traps);
-                //System.err.println("avoid1=" + avoid);
+                //System.err.println("[" + this.id + "] avoid1=" + avoid);
 
                 paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe1=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe1=" + paths.get(0));
             }
 
             //Fallback: Avoid immediate threats and traps
@@ -153,18 +153,18 @@ public class Player {
                 avoid.addAll(traps);
 
                 paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe2=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe2=" + paths.get(0));
             }
 
             // Fallback: Avoid immediate threats only
             if (paths.isEmpty()) {
                 paths = state.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe3=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe3=" + paths.get(0));
             }
 
             if (paths.isEmpty()) {
                 paths = state.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("safe4=" + paths.get(0));
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe4=" + paths.get(0));
             }
         }
         else {
