@@ -52,10 +52,6 @@ public class Player {
         return this.id;
     }
 
-    private int getOpponentId() {
-        return (this.id + 1) % 2;
-    }
-
     public int getSnippets() {
         return this.snippets;
     }
@@ -80,7 +76,24 @@ public class Player {
         this.position = position;
     }
 
-    private Set<Point> getTargets(State state) {
+    void setState(State state) {
+        this.state = state;
+    }
+
+    /*****************************************************/
+
+    private Player getOpponent() {
+        int oppId = (this.id + 1) % 2;
+        return this.state.getPlayer(oppId);
+    }
+
+    /**
+     * Gets the positions that the player can aim for. This includes all
+     * snippets, as well as weapons if the player does not have one.
+     *
+     * @return The positions of the targets
+     */
+    private Set<Point> getTargets() {
         Set<Point> targets = new HashSet<>();
         targets.addAll(state.getSnippetPositions());
 
@@ -91,98 +104,48 @@ public class Player {
         return targets;
     }
 
-    public List<Path> getPaths(State state) {
-        Point origin = this.getPosition();
-
-        Set<Point> targets = this.getTargets(state);
-        //System.err.println("[" + this.id + "] targets=" + targets);
-
-        int maxMoves = 0;
-        // Don't be a sitting duck while there are no targets:
-        // Get any safe paths within 8 moves
-        if (targets.isEmpty()) maxMoves = 8;
-
-        List<Path> pathsToThreats = this.getPathsToAllThreats(state);
-
-        // Revise threats after filter
-        //threats = pathsToThreats.stream()
-        //        .map(toThreat -> toThreat.end())
-        //        .collect(Collectors.toSet());
-        //System.err.println("threats=" + threats);
-
-        // Threats that are 2 moves away can still harm us
-        // by moving to the position that we want to move to.
-        Set<Point> immediateThreats = pathsToThreats.stream()
-                .filter(path -> path.nrMoves() <= 2)
-                .map(path -> path.position(1))
-                .collect(Collectors.toSet());
-        //System.err.println("[" + this.id + "] immediate=" + immediateThreats);
-
-        Set<Point> nearbyThreats = pathsToThreats.stream()
-                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
-                .map(path -> path.end())
-                .collect(Collectors.toSet());
-        //System.err.println("[" + this.id + "] nearby=" + nearbyThreats);
-
-        Set<Point> traps = findTraps(state, pathsToThreats, targets);
-        //System.err.println("[" + this.id + "] traps=" + traps);
-
-        List<Path> paths = null;
-        if (!this.hasWeapon) {
-            // Safe strategy: Avoid all threats and traps
-            {
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(immediateThreats);
-                avoid.addAll(nearbyThreats);
-                avoid.addAll(traps);
-                //System.err.println("[" + this.id + "] avoid1=" + avoid);
-
-                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe1=" + paths.get(0));
-            }
-
-            //Fallback: Avoid immediate threats and traps
-            if (paths.isEmpty()) {
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(immediateThreats);
-                avoid.addAll(traps);
-
-                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe2=" + paths.get(0));
-            }
-
-            // Fallback: Avoid immediate threats only
-            if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe3=" + paths.get(0));
-            }
-
-            if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe4=" + paths.get(0));
-            }
-        }
-        else {
-            // With weapon: Allowed to avoid one threat
-            Set<Point> avoid = new HashSet<>();
-            avoid.addAll(immediateThreats);
-            avoid.addAll(traps);
-
-            paths = state.findShortestPaths(origin, targets, avoid, false, maxMoves);
-            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
-        }
-        return paths;
-    }
-
-    private List<Path> getPathsToAllThreats(State state) {
-        Player opponent = state.getPlayer(this.getOpponentId());
-
+    /**
+     * Get the positions of any threats. This includes all enemy bugs, as
+     * well as the opponent player if it has a weapon. These are counted
+     * as potential threats in that we do not take into account whether
+     * they are moving away, in which case they are no longer threats.
+     *
+     * @return The positions of the threats
+     */
+    private Set<Point> getPotentialThreats() {
         Set<Point> threats = new HashSet<>();
         threats.addAll(state.getEnemyPositions());
 
+        Player opponent = this.getOpponent();
         if (opponent.hasWeapon())
             threats.add(opponent.getPosition());
 
+        return threats;
+    }
+
+    /**
+     * Like getPotentialThreats() except that it does not include enemies
+     * that are not threats because they are moving away.
+     *
+     * @return The positions of the threats.
+     */
+    private Set<Point> getThreats() {
+        Set<Point> threats = this.getPathsToThreats().stream()
+                .map(toThreat -> toThreat.end())
+                .collect(Collectors.toSet());
+        //System.err.println("threats=" + threats);
+
+        return threats;
+    }
+
+    /**
+     * Gets the most direct path to each of the potential threats and filters
+     * out the ones that are moving away and are therefore not threats.
+     *
+     * @return A list of paths to each threat
+     */
+    private List<Path> getPathsToThreats() {
+        Set<Point> threats = this.getPotentialThreats();
         List<Path> pathsToThreats = state.findShortestPaths(this.position, threats, null, true, 0);
         //System.err.println("toThreats=" + pathsToThreats);
 
@@ -205,14 +168,14 @@ public class Player {
      * Finds the intersections that can be reached by a bug before you.
      * If they can, then they can trap you in.
      *
-     * @param state The game field
-     * @param pathsToThreats A set of paths from you to each threat
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps(State state, List<Path> pathsToThreats, Set<Point> targets) {
+    private Set<Point> findTraps() {
+        List<Path> pathsToThreats = this.getPathsToThreats();
+        Set<Point> targets = this.getTargets();
+
         Set<Point> traps = new HashSet<>();
         Map<Point, Integer> intersectionOptions = new HashMap<>();
-
         for (Path toThreat : pathsToThreats) {
             int maxMoves = toThreat.nrMoves();
 
@@ -286,6 +249,83 @@ public class Player {
             }
         }
         return traps;
+    }
+
+    public List<Path> getPaths() {
+        Point origin = this.getPosition();
+
+        Set<Point> targets = this.getTargets();
+        //System.err.println("[" + this.id + "] targets=" + targets);
+
+        int maxMoves = 0;
+        // Don't be a sitting duck while there are no targets:
+        // Get any safe paths within 8 moves
+        if (targets.isEmpty()) maxMoves = 8;
+
+        List<Path> pathsToThreats = this.getPathsToThreats();
+
+        // Threats that are 2 moves away can still harm us
+        // by moving to the position that we want to move to.
+        Set<Point> immediateThreats = pathsToThreats.stream()
+                .filter(path -> path.nrMoves() <= 2)
+                .map(path -> path.position(1))
+                .collect(Collectors.toSet());
+        //System.err.println("[" + this.id + "] immediate=" + immediateThreats);
+
+        Set<Point> nearbyThreats = pathsToThreats.stream()
+                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
+                .map(path -> path.end())
+                .collect(Collectors.toSet());
+        //System.err.println("[" + this.id + "] nearby=" + nearbyThreats);
+
+        Set<Point> traps = findTraps();
+        //System.err.println("[" + this.id + "] traps=" + traps);
+
+        List<Path> paths = null;
+        if (!this.hasWeapon) {
+            // Safe strategy: Avoid all threats and traps
+            {
+                Set<Point> avoid = new HashSet<>();
+                avoid.addAll(immediateThreats);
+                avoid.addAll(nearbyThreats);
+                avoid.addAll(traps);
+                //System.err.println("[" + this.id + "] avoid1=" + avoid);
+
+                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe1=" + paths.get(0));
+            }
+
+            //Fallback: Avoid immediate threats and traps
+            if (paths.isEmpty()) {
+                Set<Point> avoid = new HashSet<>();
+                avoid.addAll(immediateThreats);
+                avoid.addAll(traps);
+
+                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe2=" + paths.get(0));
+            }
+
+            // Fallback: Avoid immediate threats only
+            if (paths.isEmpty()) {
+                paths = state.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe3=" + paths.get(0));
+            }
+
+            if (paths.isEmpty()) {
+                paths = state.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
+                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe4=" + paths.get(0));
+            }
+        }
+        else {
+            // With weapon: Allowed to avoid one threat
+            Set<Point> avoid = new HashSet<>();
+            avoid.addAll(immediateThreats);
+            avoid.addAll(traps);
+
+            paths = state.findShortestPaths(origin, targets, avoid, false, maxMoves);
+            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+        }
+        return paths;
     }
 
     @Override

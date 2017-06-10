@@ -46,8 +46,8 @@ public class Bot {
         Player myPlayer  = state.getMyPlayer();
         Player oppPlayer = state.getOpponentPlayer();
 
-        List<Path> myPaths  = myPlayer.getPaths(state);
-        List<Path> oppPaths = oppPlayer.getPaths(state);
+        List<Path> myPaths  = myPlayer.getPaths();
+        List<Path> oppPaths = oppPlayer.getPaths();
 
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));

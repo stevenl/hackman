@@ -37,6 +37,7 @@ public class State extends Field {
         for (Player player : players) {
             int playerId = player.getId();
             player.setPosition(this.getPlayerPosition(playerId));
+            player.setState(this);
 
             if (playerId == game.getMyId())
                 this.myPlayer = player;
