@@ -35,15 +35,14 @@ import java.util.stream.IntStream;
 public class Player {
 
     private int id;
-    private String name;
     private int snippets;
     private boolean hasWeapon;
     private boolean isParalyzed;
     private Point position = null;
+    private State state = null;
 
-    Player(int id, String name, int snippets, boolean hasWeapon, boolean isParalyzed) {
+    Player(int id, int snippets, boolean hasWeapon, boolean isParalyzed) {
         this.id          = id;
-        this.name        = name;
         this.snippets    = snippets;
         this.hasWeapon   = hasWeapon;
         this.isParalyzed = isParalyzed;
@@ -55,10 +54,6 @@ public class Player {
 
     private int getOpponentId() {
         return (this.id + 1) % 2;
-    }
-
-    public String getName() {
-        return this.name;
     }
 
     public int getSnippets() {

@@ -23,16 +23,14 @@ import java.util.*;
 
 public class State extends Field {
 
-    private int roundId;
-    private int myId;
-    private int oppId;
+    private Player myPlayer;
+    private Player oppPlayer;
     private Map<Integer, Player> players; // id : player
     private State prevState;
 
-    State(int roundId, String field, List<Player> players, State prevState, Game game) {
+    State(String field, List<Player> players, State prevState, Game game) {
         super(game.getFieldWidth(), game.getFieldHeight(), field);
 
-        this.roundId   = roundId;
         this.prevState = prevState;
         this.players   = new HashMap<>(2);
 
@@ -41,9 +39,9 @@ public class State extends Field {
             player.setPosition(this.getPlayerPosition(playerId));
 
             if (playerId == game.getMyId())
-                this.myId = playerId;
+                this.myPlayer = player;
             else
-                this.oppId = playerId;
+                this.oppPlayer = player;
 
             this.players.put(playerId, player);
         }
@@ -54,11 +52,11 @@ public class State extends Field {
     }
 
     public Player getMyPlayer() {
-        return this.players.get(this.myId);
+        return this.myPlayer;
     }
 
     public Player getOpponentPlayer() {
-        return this.players.get(this.oppId);
+        return this.oppPlayer;
     }
 
     public Set<Point> getPreviousEnemyPositions() {

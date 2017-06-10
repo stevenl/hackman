@@ -153,17 +153,16 @@ public class Game {
             int snippets        = Integer.parseInt(playerData.get("snippets"));
             boolean hasWeapon   = Boolean.parseBoolean(playerData.get("has_weapon"));
             boolean isParalyzed = Boolean.parseBoolean(playerData.get("is_paralyzed"));;
-            Player player = new Player(id, playerName, snippets, hasWeapon, isParalyzed);
 
+            Player player = new Player(id, snippets, hasWeapon, isParalyzed);
             players.add(player);
         }
 
         // State
         Map<String, String> roundData = updates.get("game");
-        int roundId  = Integer.parseInt(roundData.get("round"));
         String field = roundData.get("field");
 
-        return new State(roundId, field, players, this.states.peekFirst(), this);
+        return new State(field, players, this.states.peekFirst(), this);
     }
 
     @Override
