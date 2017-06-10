@@ -17,3 +17,8 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
+
+task zipSource(type: Zip) {
+    classifier = 'src'
+    from 'src/main/java'
+}
