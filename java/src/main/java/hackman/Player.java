@@ -346,7 +346,7 @@ public class Player {
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
-            //Fallback: Avoid immediate threats and traps
+            // Fallback: Avoid immediate threats and traps
             if (paths.isEmpty()) {
                 Set<Point> avoid = new HashSet<>();
                 avoid.addAll(immediateThreats);
@@ -356,9 +356,14 @@ public class Player {
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
 
-            // Fallback: Avoid immediate threats only
+            // Fallback: Play it safe and don't go after the target
             if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, true, searchWhile);
+                Set<Point> avoid = new HashSet<>();
+                avoid.addAll(immediateThreats);
+                avoid.addAll(traps);
+
+                searchWhile = (p -> p.nrMoves() <= 8);
+                paths = state.findShortestPaths(origin, null, immediateThreats, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
             }
         }
