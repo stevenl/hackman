@@ -33,15 +33,15 @@ public class Path {
     private Point end;
     private List<Move> moves;
     private List<Point> positions;
-    private Set<Point> intersections;
+    private List<Integer> intersectionMoves;
 
     private Path() {
         this.start = null;
         this.end   = null;
 
-        this.moves         = new ArrayList<>();
-        this.positions     = new ArrayList<>();
-        this.intersections = new HashSet<>();
+        this.moves     = new ArrayList<>();
+        this.positions = new ArrayList<>();
+        this.intersectionMoves = new ArrayList<>();
     }
 
     public Path(Point start) {
@@ -66,10 +66,10 @@ public class Path {
         this.positions.addAll(path.positions);
         this.positions.add(this.end);
 
-        this.intersections.addAll(path.intersections);
+        this.intersectionMoves.addAll(path.intersectionMoves);
 
         boolean isIntersection = field.getValidMoves(this.end).size() > 2;
-        if (isIntersection) this.intersections.add(this.end);
+        if (isIntersection) this.intersectionMoves.add(this.moves.size());
     }
 
     public Point start() {
@@ -108,8 +108,12 @@ public class Path {
         return this.moves.size();
     }
 
+    public List<Integer> getIntersectionMoves() {
+        return this.intersectionMoves;
+    }
+
     public int nrIntersections() {
-        return this.intersections.size();
+        return this.intersectionMoves.size();
     }
 
     @Override

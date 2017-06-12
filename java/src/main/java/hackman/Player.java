@@ -166,7 +166,7 @@ public class Player {
 
     private Set<Point> getNearbyThreats() {
         Set<Point> nearbyThreats = getPathsToThreats().stream()
-                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
+                .filter(path -> path.nrMoves() <= 8)
                 .map(path -> path.end())
                 .collect(Collectors.toSet());
 
@@ -201,6 +201,28 @@ public class Player {
         return this.pathsToThreats;
     }
 
+    /**
+     * Determines whether this player is trapped in by threats with
+     * no way of escaping harm.
+     *
+     * @return True if the player is trapped.
+     */
+    public boolean isTrapped() {
+        // Am I surrounded by immediate threats?
+        List<Path> escapePaths = state.findShortestPaths(this.position, null, getImmediateThreats(), true, p -> p.nrMoves() < 3);
+        if (escapePaths.isEmpty())
+            return true;
+
+        Set<Point> avoid = new HashSet<>();
+        avoid.addAll(getImmediateThreats());
+        avoid.addAll(getNearbyThreats());
+
+        // Are the paths to the closest intersections blocked?
+        escapePaths = state.findShortestPaths(this.position, null, avoid, true, p -> p.nrIntersections() == 0);
+
+        //System.err.println(String.format("[%d] escape=%s", id, escapePaths));
+        return escapePaths.isEmpty();
+    }
 
     /**
      * Finds the intersections that can be reached by a bug before you.
@@ -302,12 +324,18 @@ public class Player {
         // Get any safe paths within 8 moves
         Predicate<Path> searchWhile = null;
         if (targets.isEmpty())
-            searchWhile = (p -> p.nrIntersections() < 8);
+            searchWhile = (p -> p.nrMoves() <= 8);
 
         List<Path> paths = null;
         if (!this.hasWeapon) {
+            if (isTrapped()) {
+                // Minimise damage
+                searchWhile = (p -> p.nrMoves() <= 8);
+                paths = state.findShortestPaths(origin, null, getNearbyThreats(), false, searchWhile);
+            }
+
             // Safe strategy: Avoid all threats and traps
-            {
+            if (paths == null) {
                 Set<Point> avoid = new HashSet<>();
                 avoid.addAll(immediateThreats);
                 avoid.addAll(nearbyThreats);
@@ -332,11 +360,6 @@ public class Player {
             if (paths.isEmpty()) {
                 paths = state.findShortestPaths(origin, targets, immediateThreats, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
-            }
-
-            if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, false, searchWhile);
-                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe4=%s", id, paths.get(0)));
             }
         }
         else {
