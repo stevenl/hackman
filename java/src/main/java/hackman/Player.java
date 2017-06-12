@@ -21,6 +21,7 @@
 package hackman;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -183,7 +184,7 @@ public class Player {
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
             Set<Point> threats = getPotentialThreats();
-            this.pathsToThreats = state.findShortestPaths(this.position, threats, null, true, 0);
+            this.pathsToThreats = state.findShortestPaths(this.position, threats, null, true, null);
 
             // Is the enemy moving away? It's unlikely he will come back this way
             Set<Point> prevEnemyPositions = state.getPreviousEnemyPositions();
@@ -200,9 +201,6 @@ public class Player {
         return this.pathsToThreats;
     }
 
-        //System.err.println("toThreats=" + pathsToThreats);
-        return pathsToThreats;
-    }
 
     /**
      * Finds the intersections that can be reached by a bug before you.
@@ -300,10 +298,11 @@ public class Player {
         Set<Point> nearbyThreats = getNearbyThreats();
         Set<Point> traps = getTraps();
 
-        int maxMoves = 0;
-        // Don't be a sitting duck while there are no targets:
+        // Don't be a sitting duck if there are no targets:
         // Get any safe paths within 8 moves
-        if (targets.isEmpty()) maxMoves = 8;
+        Predicate<Path> searchWhile = null;
+        if (targets.isEmpty())
+            searchWhile = (p -> p.nrIntersections() < 8);
 
         List<Path> paths = null;
         if (!this.hasWeapon) {
@@ -315,8 +314,8 @@ public class Player {
                 avoid.addAll(traps);
                 //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
 
-                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe1=" + paths.get(0));
+                paths = state.findShortestPaths(origin, targets, avoid, true, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
             //Fallback: Avoid immediate threats and traps
@@ -325,19 +324,19 @@ public class Player {
                 avoid.addAll(immediateThreats);
                 avoid.addAll(traps);
 
-                paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe2=" + paths.get(0));
+                paths = state.findShortestPaths(origin, targets, avoid, true, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
 
             // Fallback: Avoid immediate threats only
             if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, true, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe3=" + paths.get(0));
+                paths = state.findShortestPaths(origin, targets, immediateThreats, true, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
             }
 
             if (paths.isEmpty()) {
-                paths = state.findShortestPaths(origin, targets, immediateThreats, false, maxMoves);
-                //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe4=" + paths.get(0));
+                paths = state.findShortestPaths(origin, targets, immediateThreats, false, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe4=%s", id, paths.get(0)));
             }
         }
         else {
@@ -347,8 +346,8 @@ public class Player {
             avoid.addAll(traps);
             //System.err.println(String.format("[%d] avoid=%s", id, avoid));
 
-            paths = state.findShortestPaths(origin, targets, avoid, false, maxMoves);
-            //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));
+            paths = state.findShortestPaths(origin, targets, avoid, false, searchWhile);
+            //if (!paths.isEmpty()) System.err.println(String.format("[%d] unsafe=%s", id, paths.get(0)));
         }
         return paths;
     }

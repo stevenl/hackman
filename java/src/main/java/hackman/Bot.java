@@ -84,7 +84,7 @@ public class Bot {
         Point origin = state.getMyPlayer().getPosition();
         Set<Point> targets = new HashSet<>();
         targets.add(state.getOpponentPlayer().getPosition());
-        List<Path> toOpponent = state.findShortestPaths(origin, targets, null, true, 0);
+        List<Path> toOpponent = state.findShortestPaths(origin, targets, null, true, null);
         int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();

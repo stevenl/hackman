@@ -21,6 +21,7 @@
 package hackman;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * hackman.Field
@@ -169,16 +170,21 @@ class Field {
      * origin to each of the targets. The resulting paths will never pass
      * through any of the points to avoid.
      *
-     * @param origin     The starting position (e.g. my current position)
-     * @param targets    The set of end positions to aim for (e.g. snippet positions)
-     * @param avoid      The set of positions to avoid (e.g. threats)
-     * @param strictMode If false, then we allow one encounter with a point that should be avoided
-     * @param maxMoves   The maximum number of moves to make before terminating the search
+     * @param origin      The starting position (e.g. my current position)
+     * @param targets     The set of end positions to aim for (e.g. snippet positions)
+     * @param avoid       The set of positions to avoid (e.g. threats)
+     * @param strictMode  If false, then we allow one encounter with a point that should be avoided
+     * @param searchWhile A predicate that defines the condition for when the search can continue
      * @return A list of Paths to each of the targets. The list is in increasing order of distance.
      */
-    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, int maxMoves) {
-        if (avoid == null) avoid = new HashSet<>();
-        if (maxMoves <= 0) maxMoves = Integer.MAX_VALUE;
+    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+        // Parameter defaults
+        if (targets == null)
+            targets = new HashSet<>();
+        if (avoid == null)
+            avoid = new HashSet<>();
+        if (searchWhile == null)
+            searchWhile = (p -> true);
 
         List<Path> paths          = new ArrayList<>();
         Queue<Path> queue         = new LinkedList<>();
@@ -199,12 +205,9 @@ class Field {
             for (Move nextMove : validMoves) {
                 Path nextPath = new Path(path, nextMove, this);
 
-                if (nextPath.nrMoves() > maxMoves) {
-                    if (targets.isEmpty()) {
-                        paths.add(path);
-                        paths.addAll(queue);
-                    }
-                    break search;
+                if (!searchWhile.test(nextPath)) {
+                    paths.add(path);
+                    continue search;
                 }
 
                 Point nextPosition = nextPath.end();
