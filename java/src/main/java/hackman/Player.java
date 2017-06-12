@@ -78,6 +78,10 @@ public class Player {
 
     void setState(State state) {
         this.state = state;
+
+        // Reset
+        this.pathsToThreats = null;
+        this.immediateThreats = null;
     }
 
     /*****************************************************/
@@ -101,6 +105,7 @@ public class Player {
         if (!this.hasWeapon)
             targets.addAll(state.getWeaponPositions());
 
+        //System.err.println(String.format("[%d] targets=%s", id, targets));
         return targets;
     }
 
@@ -116,10 +121,11 @@ public class Player {
         Set<Point> threats = new HashSet<>();
         threats.addAll(state.getEnemyPositions());
 
-        Player opponent = this.getOpponent();
+        Player opponent = getOpponent();
         if (opponent.hasWeapon())
             threats.add(opponent.getPosition());
 
+        //System.err.println(String.format("[%d] potentialThreats=%s", id, threats));
         return threats;
     }
 
@@ -130,35 +136,69 @@ public class Player {
      * @return The positions of the threats.
      */
     private Set<Point> getThreats() {
-        Set<Point> threats = this.getPathsToThreats().stream()
+        Set<Point> threats = getPathsToThreats().stream()
                 .map(toThreat -> toThreat.end())
                 .collect(Collectors.toSet());
-        //System.err.println("threats=" + threats);
 
+        //System.err.println(String.format("[%d] threats=%s", id, threats));
         return threats;
     }
 
     /**
+     * Gets the threats that are 1-2 moves away. These are the threats that
+     * can harm us in the next move. Those that are 2 steps away can harm us
+     * by moving to the position that we want to move to.
+     *
+     * @return The positions of the immediate threats
+     */
+    private Set<Point> immediateThreats = null;
+    private Set<Point> getImmediateThreats() {
+        if (this.immediateThreats == null) {
+            this.immediateThreats = getPathsToThreats().stream()
+                    .filter(path -> path.nrMoves() <= 2)
+                    .map(path -> path.position(1))
+                    .collect(Collectors.toSet());
+            //System.err.println(String.format("[%d] immediate=%s", id, immediateThreats));
+        }
+        return this.immediateThreats;
+    }
+
+    private Set<Point> getNearbyThreats() {
+        Set<Point> nearbyThreats = getPathsToThreats().stream()
+                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
+                .map(path -> path.end())
+                .collect(Collectors.toSet());
+
+        //System.err.println(String.format("[%d] nearby=%s", id, nearbyThreats));
+        return nearbyThreats;
+    }
+
+    /**
      * Gets the most direct path to each of the potential threats and filters
-     * out the ones that are moving away and are therefore not threats.
+     * out the enemies that are moving away and are therefore not threats.
      *
      * @return A list of paths to each threat
      */
+    private List<Path> pathsToThreats = null;
     private List<Path> getPathsToThreats() {
-        Set<Point> threats = this.getPotentialThreats();
-        List<Path> pathsToThreats = state.findShortestPaths(this.position, threats, null, true, 0);
-        //System.err.println("toThreats=" + pathsToThreats);
+        if (this.pathsToThreats == null) {
+            Set<Point> threats = getPotentialThreats();
+            this.pathsToThreats = state.findShortestPaths(this.position, threats, null, true, 0);
 
-        // Is the enemy moving away? It's unlikely he will come back this way
-        Set<Point> prevEnemyPositions = state.getPreviousEnemyPositions();
-        if (!prevEnemyPositions.isEmpty()) {
-            pathsToThreats = pathsToThreats.stream()
-                    .filter(toThreat -> {
-                        Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
-                        return !prevEnemyPositions.contains(penultimatePos);
-                    })
-                    .collect(Collectors.toList());
+            // Is the enemy moving away? It's unlikely he will come back this way
+            Set<Point> prevEnemyPositions = state.getPreviousEnemyPositions();
+            if (!prevEnemyPositions.isEmpty()) {
+                this.pathsToThreats = this.pathsToThreats.stream()
+                        .filter(toThreat -> {
+                            Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
+                            return !prevEnemyPositions.contains(penultimatePos);
+                        })
+                        .collect(Collectors.toList());
+            }
+            //System.err.println(String.format("[%d] toThreats=%s", id, pathsToThreats));
         }
+        return this.pathsToThreats;
+    }
 
         //System.err.println("toThreats=" + pathsToThreats);
         return pathsToThreats;
@@ -170,7 +210,7 @@ public class Player {
      *
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> findTraps() {
+    private Set<Point> getTraps() {
         List<Path> pathsToThreats = this.getPathsToThreats();
         Set<Point> targets = this.getTargets();
 
@@ -248,38 +288,22 @@ public class Player {
                 }
             }
         }
+        //System.err.println(String.format("[%d] traps=%s", id, traps));
         return traps;
     }
 
     public List<Path> getPaths() {
         Point origin = this.getPosition();
 
-        Set<Point> targets = this.getTargets();
-        //System.err.println("[" + this.id + "] targets=" + targets);
+        Set<Point> targets = getTargets();
+        Set<Point> immediateThreats = getImmediateThreats();
+        Set<Point> nearbyThreats = getNearbyThreats();
+        Set<Point> traps = getTraps();
 
         int maxMoves = 0;
         // Don't be a sitting duck while there are no targets:
         // Get any safe paths within 8 moves
         if (targets.isEmpty()) maxMoves = 8;
-
-        List<Path> pathsToThreats = this.getPathsToThreats();
-
-        // Threats that are 2 moves away can still harm us
-        // by moving to the position that we want to move to.
-        Set<Point> immediateThreats = pathsToThreats.stream()
-                .filter(path -> path.nrMoves() <= 2)
-                .map(path -> path.position(1))
-                .collect(Collectors.toSet());
-        //System.err.println("[" + this.id + "] immediate=" + immediateThreats);
-
-        Set<Point> nearbyThreats = pathsToThreats.stream()
-                .filter(path -> 2 < path.nrMoves() && path.nrMoves() <= 8)
-                .map(path -> path.end())
-                .collect(Collectors.toSet());
-        //System.err.println("[" + this.id + "] nearby=" + nearbyThreats);
-
-        Set<Point> traps = findTraps();
-        //System.err.println("[" + this.id + "] traps=" + traps);
 
         List<Path> paths = null;
         if (!this.hasWeapon) {
@@ -289,7 +313,7 @@ public class Player {
                 avoid.addAll(immediateThreats);
                 avoid.addAll(nearbyThreats);
                 avoid.addAll(traps);
-                //System.err.println("[" + this.id + "] avoid1=" + avoid);
+                //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
 
                 paths = state.findShortestPaths(origin, targets, avoid, true, maxMoves);
                 //if (!paths.isEmpty()) System.err.println("[" + this.id + "] safe1=" + paths.get(0));
@@ -321,6 +345,7 @@ public class Player {
             Set<Point> avoid = new HashSet<>();
             avoid.addAll(immediateThreats);
             avoid.addAll(traps);
+            //System.err.println(String.format("[%d] avoid=%s", id, avoid));
 
             paths = state.findShortestPaths(origin, targets, avoid, false, maxMoves);
             //if (!paths.isEmpty()) System.err.println("unsafe=" + paths.get(0));

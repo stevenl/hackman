@@ -17,13 +17,10 @@ public class BotTest {
         this.game = new Game(20, 14, 0);
         this.bot  = game.getBot();
 
-        this.players = new ArrayList<>();
-        {
-            Player player0 = new Player(0, 0, false, false);
-            Player player1 = new Player(1, 0, false, false);
-            this.players.add(player0);
-            this.players.add(player1);
-        }
+        this.players = Arrays.asList(new Player[] {
+                new Player(0, 0, false, false),
+                new Player(1, 0, false, false)
+        });
     }
 
     /**********************************************************/
@@ -37,7 +34,7 @@ public class BotTest {
 
         this.players.get(0).setWeapon(true);
         field = ".,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,1,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,E,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,E,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,0,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
-        state = new State(field, this.players, state, this.game);
+        state = new State(field, this.players, null, this.game);
         assertEquals(Move.DOWN, bot.doMove(state));
         this.players.get(0).setWeapon(false);
     }
@@ -160,7 +157,7 @@ public class BotTest {
         assertEquals(Move.DOWN, bot.doMove(state));
 
         field = ".,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,W,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,C,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,E,.,0,1,E,.,.,.";
-        state = new State(field, this.players, state, this.game);
+        state = new State(field, this.players, null, this.game);
         assertNotEquals(Move.PASS, bot.doMove(state));
     }
 
