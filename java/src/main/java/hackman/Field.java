@@ -192,7 +192,7 @@ class Field {
         Set<Point> visited        = new HashSet<>();
 
         queue.add(new Path(origin));
-        encounters.add(0);
+        encounters.add(0); // keep a count of encounters in parallel with items in queue
         visited.add(origin);
 
         // Do a breadth-first search
@@ -214,9 +214,10 @@ class Field {
                 if (visited.contains(nextPosition))
                     continue;
 
+                int newUnavoided = unavoided;
                 if (avoid.contains(nextPosition)) {
-                    if (!strictMode && unavoided == 0)
-                        unavoided++;
+                    if (!strictMode && newUnavoided == 0)
+                        newUnavoided++;
                     else
                         continue;
                 }
@@ -226,7 +227,7 @@ class Field {
 
                 visited.add(nextPosition);
                 queue.add(nextPath);
-                encounters.add(unavoided);
+                encounters.add(newUnavoided);
             }
         }
         return paths;

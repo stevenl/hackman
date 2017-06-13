@@ -83,6 +83,7 @@ public class Player {
         // Reset
         this.pathsToThreats = null;
         this.immediateThreats = null;
+        this.traps = null;
     }
 
     /*****************************************************/
@@ -230,13 +231,20 @@ public class Player {
      *
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> getTraps() {
-        List<Path> pathsToThreats = this.getPathsToThreats();
+    private Set<Point> traps = null;
+    public Set<Point> getTraps() {
+        if (this.traps == null)
+            initTraps();
+
+        return this.traps;
+    }
+
+    private void initTraps() {
+        this.traps = new HashSet<>();
         Set<Point> targets = this.getTargets();
 
-        Set<Point> traps = new HashSet<>();
         Map<Point, Integer> intersectionOptions = new HashMap<>();
-        for (Path toThreat : pathsToThreats) {
+        for (Path toThreat : getPathsToThreats()) {
             int maxMoves = toThreat.nrMoves();
 
             // These have already been detected as immediate threats and we want to
@@ -255,7 +263,7 @@ public class Player {
                 // Has the threat already trapped you in?
                 if (i == maxMoves && intersectionStack.isEmpty()) {
                     //System.err.println("trap1=" + pos);
-                    traps.add(pos);
+                    this.traps.add(pos);
                     break;
                 }
 
@@ -274,7 +282,7 @@ public class Player {
                     // Can the threat reach the intersection before you?
                     if (movesToIntersection >= threatToIntersection) {
                         //System.err.println("trap2[" + movesToIntersection + ">=" + threatToIntersection + "]=" + pos);
-                        traps.add(pos);
+                        this.traps.add(pos);
 
                         // If all paths from an intersection lead to traps then
                         // the intersection should also be considered a trap
@@ -286,7 +294,7 @@ public class Player {
 
                             if (options == 1) {
                                 //System.err.println("trap3=" + pos);
-                                traps.add(lastIntersection);
+                                this.traps.add(lastIntersection);
                             } else {
                                 break;
                             }
@@ -298,9 +306,9 @@ public class Player {
                                 .filter(p -> state.getValidMoves(p).size() > 2)
                                 .findFirst()
                                 .orElse(null);
-                        if (closedIntersection == null && !traps.contains(closedIntersection)) {
+                        if (closedIntersection == null && !this.traps.contains(closedIntersection)) {
                             //System.err.println("trap4=" + pos);
-                            traps.add(pos);
+                            this.traps.add(pos);
                         }
                         break;
                     }
@@ -309,7 +317,6 @@ public class Player {
             }
         }
         //System.err.println(String.format("[%d] traps=%s", id, traps));
-        return traps;
     }
 
     public List<Path> getPaths() {
@@ -332,6 +339,7 @@ public class Player {
                 // Minimise damage
                 searchWhile = (p -> p.nrMoves() <= 8);
                 paths = state.findShortestPaths(origin, null, getNearbyThreats(), false, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe0=%s", id, paths.get(0)));
             }
 
             // Safe strategy: Avoid all threats and traps
