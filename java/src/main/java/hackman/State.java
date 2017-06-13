@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,11 @@ package hackman;
 
 import java.util.*;
 
+/**
+ * hackman.State
+ *
+ * @author Steven Lee - stevenwh.lee@gmail.com
+ */
 public class State extends Field {
 
     private Player myPlayer;

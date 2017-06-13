@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,11 @@ package hackman;
 
 import java.util.*;
 
+/**
+ * hackman.Game
+ *
+ * @author Steven Lee - stevenwh.lee@gmail.com
+ */
 public class Game {
 
     public static void main(String[] args) {
@@ -32,7 +37,6 @@ public class Game {
     private Scanner scanner;
     private Map<String, Map<String, String>> updates;
     private LinkedList<State> states;
-    private Bot bot;
 
     private int timebank;
     private int timePerMove;
@@ -48,7 +52,6 @@ public class Game {
         this.scanner = new Scanner(System.in).useDelimiter("\n");
         this.updates = new HashMap<>();
         this.states  = new LinkedList<>();
-        this.bot     = new Bot();
     }
 
     // For testing purposes
@@ -57,10 +60,6 @@ public class Game {
         this.fieldWidth  = fieldWidth;
         this.fieldHeight = fieldHeight;
         this.myId = myId;
-    }
-
-    Bot getBot() {
-        return this.bot;
     }
 
     int getFieldWidth() {
@@ -76,6 +75,20 @@ public class Game {
     }
 
     public void run() {
+        State state = getNextState();
+        while (state != null) {
+            Move move = state.getMyPlayer().doMove();
+            if (move == null) move = Move.PASS;
+            System.out.println(move);
+
+            state = getNextState();
+        }
+    }
+
+    private State getNextState() {
+        State state = null;
+
+        state:
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
 
@@ -93,19 +106,16 @@ public class Game {
                 case "action":
                     this.timebank = Integer.parseInt(parts[2]);
 
-                    State state = parseUpdates(updates);
+                    state = parseUpdates(updates);
                     this.states.addFirst(state);
                     this.updates.clear();
-
-                    Move move = this.bot.doMove(state);
-                    if (move != null) move = Move.PASS;
-                    System.out.println(move.toString());
-                    break;
+                    break state;
                 default:
                     System.err.println("unknown command");
                     break;
             }
         }
+        return state;
     }
 
     /**

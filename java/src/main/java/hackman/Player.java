@@ -1,6 +1,5 @@
 /*
- * Copyright 2016 riddles.io (developers@riddles.io)
- * Modifications copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
+ * Copyright 2017 Steven Lee (stevenwh.lee@gmail.com)
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -28,9 +27,6 @@ import java.util.stream.IntStream;
 /**
  * hackman.Player
  *
- * Stores all information about a player
- *
- * @author Jim van Eeden - jim@riddles.io
  * @author Steven Lee - stevenwh.lee@gmail.com
  */
 public class Player {
@@ -216,7 +212,7 @@ public class Player {
      *
      * @return True if the player is trapped.
      */
-    public boolean isTrapped() {
+    private boolean isTrapped() {
         // Am I surrounded by immediate threats?
         List<Path> escapePaths = state.findShortestPaths(this.position, null, getImmediateThreats(), true, p -> p.nrMoves() < 3);
         if (escapePaths.isEmpty())
@@ -240,7 +236,7 @@ public class Player {
      * @return The set of intersection points where you can be trapped
      */
     private Set<Point> traps = null;
-    public Set<Point> getTraps() {
+    private Set<Point> getTraps() {
         if (this.traps == null)
             initTraps();
 
@@ -320,7 +316,7 @@ public class Player {
         //System.err.println(String.format("[%d] traps=%s", id, traps));
     }
 
-    public List<Path> getPaths() {
+    private List<Path> getPaths() {
         // Don't be a sitting duck if there are no targets:
         // Get any safe paths within 8 moves
         Predicate<Path> searchWhile = null;
@@ -374,6 +370,73 @@ public class Player {
             //if (!paths.isEmpty()) System.err.println(String.format("[%d] unsafe=%s", id, paths.get(0)));
         }
         return paths;
+    }
+
+    /**
+     * Does a move action.
+     *
+     * @return A Move object
+     */
+    public Move doMove() {
+        //System.err.println("\n" + state);
+
+        List<Path> myPaths  = this.getPaths();
+        List<Path> oppPaths = this.getOpponent().getPaths();
+
+        //System.err.println("myPath=" + myPaths.get(0));
+        //System.err.println("oppPath=" + oppPaths.get(0));
+        //System.err.println("myPaths=" + myPaths);
+        //System.err.println("oppPaths=" + oppPaths);
+
+        Map<Point, Path> oppPathsByTarget = new HashMap<>();
+        Map<Point, Integer> oppPathRank = new HashMap<>();
+        int i = 1;
+        for (Path oppPath : oppPaths) {
+            Point target = oppPath.end();
+            oppPathsByTarget.put(target, oppPath);
+            oppPathRank.put(target, i++);
+        }
+
+        Set<Point> targets = new HashSet<>();
+        targets.add(getOpponent().getPosition());
+        List<Path> toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
+        int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
+
+        Map<Move, Float> moveScores = new HashMap<>();
+        for (Path myPath : myPaths) {
+            Point target = myPath.end();
+            Path oppPath = oppPathsByTarget.get(target);
+
+            float score = 1.0f / myPath.nrMoves();
+
+            if (oppPath != null) {
+                // Cut our losses: Ditch targets that opponent can get to first
+                if (oppPath.nrMoves() < myPath.nrMoves()) {
+                    int pathRank = oppPathRank.get(target);
+                    score *= 1.0f - (1.0f / pathRank);
+                }
+                // Don't let him have any: Prefer targets nearer to opponent
+                else if (oppPath.nrMoves() < nrMovesToOpponent) {
+                    score *= 1.4;
+                }
+            }
+
+            Move move = myPath.move(0);
+            float newScore = moveScores.getOrDefault(move, 0.0f);
+            newScore += score;
+
+            moveScores.put(move, newScore);
+        }
+        //System.err.println("scores=" + moveScores);
+
+        // Choose the move with the highest score
+        Move move = moveScores.entrySet().stream()
+                .max((e1, e2) -> Float.compare(e1.getValue(), e2.getValue()))
+                .map(e -> e.getKey())
+                .orElse(null);
+
+        //System.err.println("move=" + move);
+        return move != null ? move : Move.PASS;
     }
 
     @Override
