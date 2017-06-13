@@ -108,9 +108,13 @@ public class Path {
         return this.moves.size();
     }
 
-    public List<Integer> getIntersectionMoves() {
-        return this.intersectionMoves;
-    }
+    //public List<Integer> getIntersectionMoves() {
+    //    return this.intersectionMoves;
+    //}
+    //
+    //public int getIntersectionMove(int intersectionIndex) {
+    //    return this.intersectionMoves.get(intersectionIndex);
+    //}
 
     public int nrIntersections() {
         return this.intersectionMoves.size();
