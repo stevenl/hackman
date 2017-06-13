@@ -166,37 +166,21 @@ public class Player {
     }
 
     /**
-     * Gets the threats that are between the player and its closest intersections.
-     * These are the threats that can trap the player in.
+     * Gets the threats that are less than two intersection away from
+     * the player. These threats are close enough such that they will
+     * often not be detected as traps (because the player can reach
+     * the first intersection before them).
      *
      * @return The positions of the nearby threats
      */
     private Set<Point> getNearbyThreats() {
         Set<Point> nearbyThreats = getPathsToThreats().stream()
-                .filter(path -> path.nrIntersections() == 0)
+                .filter(path -> path.nrIntersections() < 2)
                 .map(path -> path.end())
                 .collect(Collectors.toSet());
 
         //System.err.println(String.format("[%d] nearby=%s", id, nearbyThreats));
         return nearbyThreats;
-    }
-
-    /**
-     * Gets the threats that are one intersection away from the player.
-     * These threats are close enough such that they will often not be
-     * detected as traps (because the player can reach the first
-     * intersection before them).
-     *
-     * @return The positions of the moderate threats
-     */
-    private Set<Point> getModerateThreats() {
-        Set<Point> moderateThreats = getPathsToThreats().stream()
-                .filter(path -> path.nrIntersections() == 1)
-                .map(path -> path.end())
-                .collect(Collectors.toSet());
-
-        //System.err.println(String.format("[%d] moderate=%s", id, moderateThreats));
-        return moderateThreats;
     }
 
     /**
@@ -337,17 +321,10 @@ public class Player {
     }
 
     public List<Path> getPaths() {
-        Point origin = this.getPosition();
-
-        Set<Point> targets = getTargets();
-        Set<Point> immediateThreats = getImmediateThreats();
-        Set<Point> nearbyThreats = getNearbyThreats();
-        Set<Point> traps = getTraps();
-
         // Don't be a sitting duck if there are no targets:
         // Get any safe paths within 8 moves
         Predicate<Path> searchWhile = null;
-        if (targets.isEmpty())
+        if (getTargets().isEmpty())
             searchWhile = (p -> p.nrMoves() <= 8);
 
         List<Path> paths = null;
@@ -356,11 +333,10 @@ public class Player {
                 // Minimise damage since we can't avoid them completely
                 Set<Point> avoid = new HashSet<>();
                 avoid.addAll(getNearbyThreats());
-                avoid.addAll(getModerateThreats());
                 avoid.addAll(getTraps());
 
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
-                paths = state.findShortestPaths(origin, null, avoid, false, searchWhile);
+                paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe0=%s", id, paths.get(0)));
             }
 
@@ -369,11 +345,10 @@ public class Player {
                 Set<Point> avoid = new HashSet<>();
                 avoid.addAll(getImmediateThreats());
                 avoid.addAll(getNearbyThreats());
-                avoid.addAll(getModerateThreats());
                 avoid.addAll(getTraps());
                 //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
 
-                paths = state.findShortestPaths(origin, targets, avoid, true, searchWhile);
+                paths = state.findShortestPaths(this.position, getTargets(), avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
@@ -381,11 +356,10 @@ public class Player {
             if (paths.isEmpty()) {
                 Set<Point> avoid = new HashSet<>();
                 avoid.addAll(getNearbyThreats());
-                avoid.addAll(getModerateThreats());
                 avoid.addAll(getTraps());
 
                 searchWhile = (p -> p.nrMoves() <= 8);
-                paths = state.findShortestPaths(origin, null, avoid, true, searchWhile);
+                paths = state.findShortestPaths(this.position, null, avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
         }
@@ -393,11 +367,10 @@ public class Player {
             // With weapon: Allowed to avoid one threat
             Set<Point> avoid = new HashSet<>();
             avoid.addAll(getNearbyThreats());
-            avoid.addAll(getModerateThreats());
             avoid.addAll(getTraps());
             //System.err.println(String.format("[%d] avoid=%s", id, avoid));
 
-            paths = state.findShortestPaths(origin, targets, avoid, false, searchWhile);
+            paths = state.findShortestPaths(this.position, getTargets(), avoid, false, searchWhile);
             //if (!paths.isEmpty()) System.err.println(String.format("[%d] unsafe=%s", id, paths.get(0)));
         }
         return paths;
