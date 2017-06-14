@@ -76,7 +76,8 @@ public class Player {
     void setState(State state) {
         this.state = state;
 
-        // Reset
+        // Reset cached attributes
+        this.toOpponent = null;
         this.pathsToThreats = null;
         this.immediateThreats = null;
         this.traps = null;
@@ -100,13 +101,16 @@ public class Player {
      *
      * @return A path to the opponent player.
      */
+    private List<Path> toOpponent = null;
     private Path getPathToOpponent() {
-        Set<Point> targets = new HashSet<>();
-        targets.add(getOpponent().getPosition());
-        List<Path> toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
+        if (this.toOpponent == null) {
+            Set<Point> targets = new HashSet<>();
+            targets.add(getOpponent().getPosition());
+            this.toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
+        }
 
-        if (!toOpponent.isEmpty())
-            return toOpponent.get(0);
+        if (!this.toOpponent.isEmpty())
+            return this.toOpponent.get(0);
         else
             return null;
     }
