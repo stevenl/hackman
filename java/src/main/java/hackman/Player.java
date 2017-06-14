@@ -282,6 +282,7 @@ public class Player {
                 continue;
 
             // Find any intersections between you and the bug
+            //System.err.println(String.format("[%d] toThreat=%s", id, toThreat));
             Deque<Point> intersectionStack = new ArrayDeque<>();
             for (int i = 1; i <= maxMoves; i++) {
                 Point pos = toThreat.position(i);
@@ -289,7 +290,18 @@ public class Player {
                 // Is it an intersection?
                 // (Don't count the point we come from)
                 int nrMoveOptions = state.getValidMoves(pos).size() - 1;
-                if (nrMoveOptions > 1 || targets.contains(pos)) {
+                boolean isIntersection = nrMoveOptions > 1;
+                if (targets.contains(pos) && !isIntersection) {
+                    int movesToTarget = i;
+                    int threatToTarget = maxMoves - i;
+
+                    // Can the threat reach the target before you?
+                    if (movesToTarget >= threatToTarget) {
+                        //System.err.println(String.format("trap1=[%d >= %d]=%s", movesToTarget, threatToTarget, pos));
+                        this.traps.add(pos);
+                    }
+                }
+                else if (isIntersection) {
                     if (!intersectionOptions.containsKey(pos))
                         intersectionOptions.put(pos, nrMoveOptions);
                     else
@@ -300,7 +312,7 @@ public class Player {
 
                     // Can the threat reach the intersection before you?
                     if (movesToIntersection >= threatToIntersection) {
-                        //System.err.println("trap2[" + movesToIntersection + ">=" + threatToIntersection + "]=" + pos);
+                        //System.err.println(String.format("trap2=[%d >= %d]=%s", movesToIntersection, threatToIntersection, pos));
                         this.traps.add(pos);
 
                         // If all paths from an intersection lead to traps then
@@ -312,7 +324,7 @@ public class Player {
                             intersectionOptions.put(lastIntersection, options - 1);
 
                             if (options == 1) {
-                                //System.err.println("trap3=" + pos);
+                                //System.err.println("trap3=" + lastIntersection);
                                 this.traps.add(lastIntersection);
                             } else {
                                 break;
