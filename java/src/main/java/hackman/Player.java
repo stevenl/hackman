@@ -212,7 +212,7 @@ public class Player {
      *
      * @return True if the player is trapped.
      */
-    private boolean isTrapped() {
+    boolean isTrapped() {
         // Am I surrounded by immediate threats?
         List<Path> escapePaths = state.findShortestPaths(this.position, null, getImmediateThreats(), true, p -> p.nrMoves() < 3);
         if (escapePaths.isEmpty())
@@ -410,14 +410,17 @@ public class Player {
             float score = 1.0f / myPath.nrMoves();
 
             if (oppPath != null) {
+                List<Point> intersectingPoints = myPath.getIntersectingPoints(oppPath);
+                Point meetingPoint = intersectingPoints.size() > 0 ? intersectingPoints.get(0) : null;
+
                 // Cut our losses: Ditch targets that opponent can get to first
                 if (oppPath.nrMoves() < myPath.nrMoves()) {
                     int pathRank = oppPathRank.get(target);
                     score *= 1.0f - (1.0f / pathRank);
                 }
                 // Don't let him have any: Prefer targets nearer to opponent
-                else if (oppPath.nrMoves() < nrMovesToOpponent) {
-                    score *= 1.4;
+                else if (meetingPoint != null && oppPath.getMoveNr(meetingPoint) < nrMovesToOpponent) {
+                    score *= 1.55;
                 }
             }
 

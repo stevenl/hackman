@@ -20,6 +20,7 @@
 package hackman;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * hackman.Path
@@ -108,6 +109,16 @@ public class Path {
         return this.moves.size();
     }
 
+    public int getMoveNr(Point pos) {
+        int i = 0;
+        for (Point p : this.positions) {
+            if (p.equals(pos))
+                return i;
+            i++;
+        }
+        throw new RuntimeException("Path does not contains the position: " + pos);
+    }
+
     //public List<Integer> getIntersectionMoves() {
     //    return this.intersectionMoves;
     //}
@@ -118,6 +129,15 @@ public class Path {
 
     public int nrIntersections() {
         return this.intersectionMoves.size();
+    }
+
+    public List<Point> getIntersectingPoints(Path other) {
+        Set<Point> otherPositions = new HashSet<>(other.positions);
+        List<Point> intersectingPoints = this.positions.stream()
+                .filter(p -> otherPositions.contains(p))
+                .collect(Collectors.toList());
+
+        return intersectingPoints;
     }
 
     @Override
