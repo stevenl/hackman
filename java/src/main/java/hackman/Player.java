@@ -251,6 +251,16 @@ public class Player {
         return escapePaths.isEmpty();
     }
 
+     boolean canBeTrapped() {
+         Set<Point> avoid = new HashSet<>();
+         avoid.addAll(getImmediateThreats());
+         avoid.addAll(getNearbyThreats());
+         avoid.addAll(getTraps());
+
+         List<Path> escapePaths = state.findShortestPaths(this.position, null, avoid, !hasWeapon(), p -> p.nrIntersections() < 2);
+         return escapePaths.isEmpty();
+     }
+
     /**
      * Finds the intersections that can be reached by a bug before you.
      * If they can, then they can trap you in.

@@ -87,6 +87,8 @@ class Field {
                             break;
                         case 'E':
                             this.enemyPositions.add(position);
+                            if (BUG_ENTRANCE_1.contains(position) || BUG_ENTRANCE_2.contains(position))
+                                this.field[x][y] = "E";
                             break;
                         case 'W':
                             this.weaponPositions.add(position);
