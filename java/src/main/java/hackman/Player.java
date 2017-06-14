@@ -84,9 +84,31 @@ public class Player {
 
     /*****************************************************/
 
+    /**
+     * Gets the opponent of this player.
+     *
+     * @return The opponent player
+     */
     private Player getOpponent() {
         int oppId = (this.id + 1) % 2;
         return this.state.getPlayer(oppId);
+    }
+
+    /**
+     * Gets a safe path to the opponent player
+     * or null if no such path can be found.
+     *
+     * @return A path to the opponent player.
+     */
+    private Path getPathToOpponent() {
+        Set<Point> targets = new HashSet<>();
+        targets.add(getOpponent().getPosition());
+        List<Path> toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
+
+        if (!toOpponent.isEmpty())
+            return toOpponent.get(0);
+        else
+            return null;
     }
 
     /**
@@ -397,10 +419,8 @@ public class Player {
             oppPathRank.put(target, i++);
         }
 
-        Set<Point> targets = new HashSet<>();
-        targets.add(getOpponent().getPosition());
-        List<Path> toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
-        int nrMovesToOpponent = !toOpponent.isEmpty() ? toOpponent.get(0).nrMoves() : 0;
+        Path toOpponent = getPathToOpponent();
+        int nrMovesToOpponent = toOpponent != null ? toOpponent.nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();
         for (Path myPath : myPaths) {
