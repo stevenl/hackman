@@ -496,7 +496,7 @@ public class Player {
                 }
             }
 
-            Move move = myPath.move(0);
+            Move move = myPath.nrMoves() > 0 ? myPath.move(0) : Move.PASS;
             float newScore = moveScores.getOrDefault(move, 0.0f);
             newScore += score;
 

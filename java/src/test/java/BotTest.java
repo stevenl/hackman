@@ -228,12 +228,19 @@ public class BotTest {
 
     @Test
     public void trapOpponent() {
+        // Trap the opponent if it is certain that we can
         this.myPlayer.setWeapon(true);
+
         String field = ".,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,C,.,.,x,x,x,0,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,xE,x,x,x,x,.,.,1,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,E,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
         State  state = new State(field, this.players, null, this.game);
         assert(oppPlayer.canBeTrapped());
-        System.err.println(state);
         assertEquals(Move.DOWN, myPlayer.doMove());
+
+        // ... and stay put if already in position
+        field = ".,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,C,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,0,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,xE,x,x,x,x,.,.,1,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,E,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        state = new State(field, this.players, null, this.game);
+        assert(oppPlayer.canBeTrapped());
+        assertEquals(Move.PASS, myPlayer.doMove());
 
         this.myPlayer.setWeapon(false);
     }
