@@ -414,8 +414,34 @@ public class Player {
             avoid.addAll(getTraps());
             //System.err.println(String.format("[%d] avoid=%s", id, avoid));
 
-            paths = state.findShortestPaths(this.position, getTargets(), avoid, false, searchWhile);
-            //if (!paths.isEmpty()) System.err.println(String.format("[%d] unsafe=%s", id, paths.get(0)));
+            // Trap the opponent
+            Player opponent = getOpponent();
+            if (!opponent.hasWeapon() && !opponent.isTrapped() && opponent.canBeTrapped()) {
+                Path toOpponent = getPathToOpponent();
+                if (toOpponent != null) {
+                    Set<Point> oppTraps = opponent.getTraps();
+
+                    Point destination = oppTraps.contains(this.position) ? this.position : null;
+                    for (int n : toOpponent.getIntersectionMoves()) {
+                        Point pos = toOpponent.position(n);
+                        if (oppTraps.contains(pos))
+                            destination = pos;
+                    }
+
+                    if (destination != null) {
+                        paths = new ArrayList<>();
+                        Path toSetTrap = toOpponent.subPath(this.position, destination);
+                        paths.add(toSetTrap);
+                        //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon1=%s", id, paths.get(0)));
+                    }
+                }
+            }
+
+            // Go for a target
+            if (paths == null) {
+                paths = state.findShortestPaths(this.position, getTargets(), avoid, false, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon2=%s", id, paths.get(0)));
+            }
         }
         return paths;
     }

@@ -73,6 +73,62 @@ public class Path {
         if (isIntersection) this.intersectionMoves.add(this.moves.size());
     }
 
+    private Path(Point start, Point end, List<Move> moves, List<Point> positions, List<Integer> intersectionMoves) {
+        this();
+        this.start = start;
+        this.end   = end;
+
+        this.moves.addAll(moves);
+        this.positions.addAll(positions);
+        this.intersectionMoves.addAll(intersectionMoves);
+    }
+
+    Path subPath(Point start, Point end) {
+        List<Move> moves = new ArrayList<>();
+        List<Point> positions = new ArrayList<>();
+        List<Integer> intersectionMoves = new ArrayList<>();
+
+        // Find the starting point
+        int i = 0;
+        int intNr = 0;
+        for (Point pos : this.positions) {
+            if (intNr < this.intersectionMoves.size()) {
+                if (i == this.intersectionMoves.get(intNr))
+                    intNr++;
+            }
+            if (pos.equals(start))
+                break;
+            i++;
+        }
+        if (i == nrMoves())
+            throw new RuntimeException("start point is not in the path: " + start);
+
+        // Find the ending point
+        int j = i;
+        for (Point pos : this.positions.subList(i, this.positions.size() - 1)) {
+            positions.add(pos);
+
+            if (intNr < this.intersectionMoves.size()) {
+                if (j == this.intersectionMoves.get(intNr)) {
+                    intersectionMoves.add(j);
+                    intNr++;
+                }
+            }
+
+            if (pos.equals(end))
+                break;
+
+            moves.add(this.moves.get(j));
+            j++;
+        }
+        if (j == nrMoves())
+            throw new RuntimeException("end point is not in the path: " + end);
+
+        Path subPath = new Path(start, end, moves, positions, intersectionMoves);
+
+        return subPath;
+    }
+
     public Point start() {
         return this.start;
     }
@@ -119,10 +175,10 @@ public class Path {
         throw new RuntimeException("Path does not contains the position: " + pos);
     }
 
-    //public List<Integer> getIntersectionMoves() {
-    //    return this.intersectionMoves;
-    //}
-    //
+    public List<Integer> getIntersectionMoves() {
+        return this.intersectionMoves;
+    }
+
     //public int getIntersectionMove(int intersectionIndex) {
     //    return this.intersectionMoves.get(intersectionIndex);
     //}
