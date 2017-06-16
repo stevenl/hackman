@@ -418,7 +418,12 @@ public class Player {
             Player opponent = getOpponent();
             if (!opponent.hasWeapon() && !opponent.isTrapped() && opponent.canBeTrapped()) {
                 Path toOpponent = getPathToOpponent();
-                if (toOpponent != null) {
+
+                Set<Point> threats = getPotentialThreats();
+                boolean pathHasEnemy = toOpponent.getPositions().stream()
+                        .anyMatch(pos -> threats.contains(pos));
+
+                if (toOpponent != null && !pathHasEnemy) {
                     Set<Point> oppTraps = opponent.getTraps();
 
                     Point destination = oppTraps.contains(this.position) ? this.position : null;

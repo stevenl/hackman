@@ -137,6 +137,10 @@ public class Path {
         return this.end;
     }
 
+    public List<Point> getPositions() {
+        return this.positions;
+    }
+
     public Point position(int n) {
         if (n < 0)
             throw new IndexOutOfBoundsException("'n' must not be less than 0");

@@ -242,6 +242,18 @@ public class BotTest {
         assert(oppPlayer.canBeTrapped());
         assertEquals(Move.PASS, myPlayer.doMove());
 
+        // ... but don't if an enemy stands in the way of getting there
+        field = ".,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,0,.,.,E,x,.,.,x,.,x,x,x,.,.,.,x,x,C,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,xE,x,x,x,x,.,.,1,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,E,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        state = new State(field, this.players, null, this.game);
+        assert(oppPlayer.canBeTrapped());
+        assertEquals(Move.LEFT, myPlayer.doMove());
+
+        // ... and don't if the trap can be set without my player
+        field = ".,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,C,.,0,x,x,x,.,x,E,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,xE,x,x,x,x,.,.,1,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,E,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        state = new State(field, this.players, null, this.game);
+        assert(oppPlayer.canBeTrapped());
+        assertEquals(Move.LEFT, myPlayer.doMove());
+
         this.myPlayer.setWeapon(false);
     }
 
