@@ -65,12 +65,12 @@ public class State extends Field {
         return this.oppPlayer;
     }
 
-    public Set<Point> getPreviousEnemyPositions() {
-        Set<Point> prevEnemyPositions = new HashSet<>();
+    public Map<Point, Integer> getPreviousEnemyPositions() {
+        Map<Point, Integer> prevEnemyPositions = new HashMap<>();
 
         if (this.prevState != null) {
-            Set<Point> enemies = this.prevState.getEnemyPositions();
-            prevEnemyPositions.addAll(enemies);
+            Map<Point, Integer> enemies = this.prevState.getEnemyPositions();
+            prevEnemyPositions.putAll(enemies);
         }
         return prevEnemyPositions;
     }

@@ -44,13 +44,13 @@ class Field {
     private String[][] field = null;
 
     private Map<Integer, Point> playerPositions; // <id, position>
-    private Set<Point> enemyPositions;
+    private Map<Point, Integer> enemyPositions;  // <position, count>
     private Set<Point> snippetPositions;
     private Set<Point> weaponPositions;
 
     private Field() {
         this.playerPositions  = new HashMap<>();
-        this.enemyPositions   = new HashSet<>();
+        this.enemyPositions   = new HashMap<>();
         this.snippetPositions = new HashSet<>();
         this.weaponPositions  = new HashSet<>();
     }
@@ -86,7 +86,7 @@ class Field {
                             this.snippetPositions.add(position);
                             break;
                         case 'E':
-                            this.enemyPositions.add(position);
+                            this.enemyPositions.compute(position, (k, v) -> v != null ? v + 1 : 1);
                             if (BUG_ENTRANCE_1.contains(position) || BUG_ENTRANCE_2.contains(position))
                                 this.field[x][y] = "E";
                             break;
@@ -108,7 +108,7 @@ class Field {
         return playerPositions.get(playerId);
     }
 
-    public Set<Point> getEnemyPositions() {
+    public Map<Point, Integer> getEnemyPositions() {
         return this.enemyPositions;
     }
 
@@ -154,10 +154,12 @@ class Field {
     public boolean isPointValid(Point p) {
         // Special handling for the bugs source (which is marked as a wall)
         if (BUG_ENTRANCE_1.contains(p)) {
-            return this.enemyPositions.stream().anyMatch(e -> BUG_ENTRANCE_1.contains(e));
+            return this.enemyPositions.keySet().stream()
+                    .anyMatch(e -> BUG_ENTRANCE_1.contains(e));
         }
         else if (BUG_ENTRANCE_2.contains(p)) {
-            return this.enemyPositions.stream().anyMatch(e -> BUG_ENTRANCE_2.contains(e));
+            return this.enemyPositions.keySet().stream()
+                    .anyMatch(e -> BUG_ENTRANCE_2.contains(e));
         }
 
         int x = p.x;
@@ -179,12 +181,12 @@ class Field {
      * @param searchWhile A predicate that defines the condition for when the search can continue
      * @return A list of Paths to each of the targets. The list is in increasing order of distance.
      */
-    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Set<Point> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Map<Point, Integer> avoid, boolean strictMode, Predicate<Path> searchWhile) {
         // Parameter defaults
         if (targets == null)
             targets = new HashSet<>();
         if (avoid == null)
-            avoid = new HashSet<>();
+            avoid = new HashMap<>();
         if (searchWhile == null)
             searchWhile = (p -> true);
 
@@ -217,11 +219,11 @@ class Field {
                     continue;
 
                 int newUnavoided = unavoided;
-                if (avoid.contains(nextPosition)) {
-                    if (!strictMode && newUnavoided == 0)
+                if (avoid.containsKey(nextPosition)) {
+                    if (!strictMode && newUnavoided == 0 && avoid.get(nextPosition) == 1)
                         newUnavoided++;
                     else
-                        continue;
+                        continue; // We've reached a position to avoid - Don't add this path
                 }
 
                 if (targets.contains(nextPosition))

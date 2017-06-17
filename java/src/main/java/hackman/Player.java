@@ -141,13 +141,13 @@ public class Player {
      *
      * @return The positions of the threats
      */
-    private Set<Point> getPotentialThreats() {
-        Set<Point> threats = new HashSet<>();
-        threats.addAll(state.getEnemyPositions());
+    private Map<Point, Integer> getPotentialThreats() {
+        Map<Point, Integer> threats = new HashMap<>();
+        threats.putAll(state.getEnemyPositions());
 
         Player opponent = getOpponent();
         if (opponent.hasWeapon())
-            threats.add(opponent.getPosition());
+            threats.compute(opponent.getPosition(), (k, v) -> v != null ? v + 1 : 1);
 
         //System.err.println(String.format("[%d] potentialThreats=%s", id, threats));
         return threats;
@@ -159,10 +159,11 @@ public class Player {
      *
      * @return The positions of the threats.
      */
-    private Set<Point> getThreats() {
-        Set<Point> threats = getPathsToThreats().stream()
-                .map(toThreat -> toThreat.end())
-                .collect(Collectors.toSet());
+    private Map<Point, Integer> getThreats() {
+        Map<Point, Integer> potentialThreats = getPotentialThreats();
+        Map<Point, Integer> threats = getPathsToThreats().stream()
+                .map(path -> path.end())
+                .collect(Collectors.toMap(pos -> pos, pos -> potentialThreats.get(pos)));
 
         //System.err.println(String.format("[%d] threats=%s", id, threats));
         return threats;
@@ -175,13 +176,15 @@ public class Player {
      *
      * @return The positions of the immediate threats
      */
-    private Set<Point> immediateThreats = null;
-    private Set<Point> getImmediateThreats() {
+    private Map<Point, Integer> immediateThreats = null;
+    private Map<Point, Integer> getImmediateThreats() {
         if (this.immediateThreats == null) {
+            Map<Point, Integer> threats = getPotentialThreats();
             this.immediateThreats = getPathsToThreats().stream()
                     .filter(path -> path.nrMoves() <= 2)
                     .map(path -> path.position(1))
-                    .collect(Collectors.toSet());
+                    .distinct()
+                    .collect(Collectors.toMap(pos -> pos, pos -> 1));
             //System.err.println(String.format("[%d] immediate=%s", id, immediateThreats));
         }
         return this.immediateThreats;
@@ -195,11 +198,12 @@ public class Player {
      *
      * @return The positions of the nearby threats
      */
-    private Set<Point> getNearbyThreats() {
-        Set<Point> nearbyThreats = getPathsToThreats().stream()
+    private Map<Point, Integer> getNearbyThreats() {
+        Map<Point, Integer> threats = getPotentialThreats();
+        Map<Point, Integer> nearbyThreats = getPathsToThreats().stream()
                 .filter(path -> path.nrIntersections() < 2)
                 .map(path -> path.end())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toMap(pos -> pos, pos -> threats.get(pos)));
 
         //System.err.println(String.format("[%d] nearby=%s", id, nearbyThreats));
         return nearbyThreats;
@@ -214,16 +218,16 @@ public class Player {
     private List<Path> pathsToThreats = null;
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
-            Set<Point> threats = getPotentialThreats();
-            this.pathsToThreats = state.findShortestPaths(this.position, threats, null, true, null);
+            Map<Point, Integer> threats = getPotentialThreats();
+            this.pathsToThreats = state.findShortestPaths(this.position, threats.keySet(), null, true, null);
 
             // Is the enemy moving away? It's unlikely he will come back this way
-            Set<Point> prevEnemyPositions = state.getPreviousEnemyPositions();
+            Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
             if (!prevEnemyPositions.isEmpty()) {
                 this.pathsToThreats = this.pathsToThreats.stream()
                         .filter(toThreat -> {
                             Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
-                            return !prevEnemyPositions.contains(penultimatePos);
+                            return !prevEnemyPositions.containsKey(penultimatePos);
                         })
                         .collect(Collectors.toList());
             }
@@ -244,9 +248,9 @@ public class Player {
         if (escapePaths.isEmpty())
             return true;
 
-        Set<Point> avoid = new HashSet<>();
-        avoid.addAll(getImmediateThreats());
-        avoid.addAll(getNearbyThreats());
+        Map<Point, Integer> avoid = new HashMap<>();
+        getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+        getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
         // Are the paths to the closest intersections blocked?
         escapePaths = state.findShortestPaths(this.position, null, avoid, true, p -> p.nrIntersections() == 0);
@@ -255,15 +259,20 @@ public class Player {
         return escapePaths.isEmpty();
     }
 
-     boolean canBeTrapped() {
-         Set<Point> avoid = new HashSet<>();
-         avoid.addAll(getImmediateThreats());
-         avoid.addAll(getNearbyThreats());
-         avoid.addAll(getTraps());
+    /**
+     * Determines whether this player can be trapped in by threats.
+     *
+     * @return True if the player can be trapped.
+     */
+    boolean canBeTrapped() {
+        Map<Point, Integer> avoid = new HashMap<>();
+        getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+        getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+        getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
-         List<Path> escapePaths = state.findShortestPaths(this.position, null, avoid, !hasWeapon(), p -> p.nrIntersections() < 2);
-         return escapePaths.isEmpty();
-     }
+        List<Path> escapePaths = state.findShortestPaths(this.position, null, avoid, !hasWeapon(), p -> p.nrIntersections() < 2);
+        return escapePaths.isEmpty();
+    }
 
     /**
      * Finds the intersections that can be reached by a bug before you.
@@ -271,8 +280,8 @@ public class Player {
      *
      * @return The set of intersection points where you can be trapped
      */
-    private Set<Point> traps = null;
-    private Set<Point> getTraps() {
+    private Map<Point, Integer> traps = null;
+    private Map<Point, Integer> getTraps() {
         if (this.traps == null)
             initTraps();
 
@@ -280,7 +289,7 @@ public class Player {
     }
 
     private void initTraps() {
-        this.traps = new HashSet<>();
+        this.traps = new HashMap<>();
         Set<Point> targets = this.getTargets();
 
         Map<Point, Integer> intersectionOptions = new HashMap<>();
@@ -312,7 +321,7 @@ public class Player {
                     // Can the threat reach the target before you?
                     if (movesToTarget >= threatToTarget) {
                         //System.err.println(String.format("trap1=[%d >= %d]=%s", movesToTarget, threatToTarget, pos));
-                        this.traps.add(pos);
+                        this.traps.put(pos, 1);
                     }
                 }
                 else if (isIntersection) {
@@ -327,7 +336,7 @@ public class Player {
                     // Can the threat reach the intersection before you?
                     if (movesToIntersection >= threatToIntersection) {
                         //System.err.println(String.format("trap2=[%d >= %d]=%s", movesToIntersection, threatToIntersection, pos));
-                        this.traps.add(pos);
+                        this.traps.put(pos, 1);
 
                         // If all paths from an intersection lead to traps then
                         // the intersection should also be considered a trap
@@ -339,7 +348,7 @@ public class Player {
 
                             if (options == 1) {
                                 //System.err.println("trap3=" + lastIntersection);
-                                this.traps.add(lastIntersection);
+                                this.traps.put(lastIntersection, 1);
                             } else {
                                 break;
                             }
@@ -351,9 +360,9 @@ public class Player {
                                 .filter(p -> state.getValidMoves(p).size() > 2)
                                 .findFirst()
                                 .orElse(null);
-                        if (closedIntersection == null && !this.traps.contains(closedIntersection)) {
+                        if (closedIntersection == null && !this.traps.containsKey(closedIntersection)) {
                             //System.err.println("trap4=" + pos);
-                            this.traps.add(pos);
+                            this.traps.put(pos, 1);
                         }
                         break;
                     }
@@ -375,9 +384,9 @@ public class Player {
         if (!this.hasWeapon) {
             if (isTrapped()) {
                 // Minimise damage since we can't avoid them completely
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(getNearbyThreats());
-                avoid.addAll(getTraps());
+                Map<Point, Integer> avoid = new HashMap<>();
+                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
                 paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
@@ -386,10 +395,10 @@ public class Player {
 
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(getImmediateThreats());
-                avoid.addAll(getNearbyThreats());
-                avoid.addAll(getTraps());
+                Map<Point, Integer> avoid = new HashMap<>();
+                getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
                 //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
 
                 paths = state.findShortestPaths(this.position, getTargets(), avoid, true, searchWhile);
@@ -398,9 +407,9 @@ public class Player {
 
             // Fallback: Going after the target is too dangerous
             if (paths.isEmpty()) {
-                Set<Point> avoid = new HashSet<>();
-                avoid.addAll(getNearbyThreats());
-                avoid.addAll(getTraps());
+                Map<Point, Integer> avoid = new HashMap<>();
+                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
                 searchWhile = (p -> p.nrMoves() <= 8);
                 paths = state.findShortestPaths(this.position, null, avoid, true, searchWhile);
@@ -409,9 +418,9 @@ public class Player {
         }
         else {
             // With weapon: Allowed to avoid one threat
-            Set<Point> avoid = new HashSet<>();
-            avoid.addAll(getNearbyThreats());
-            avoid.addAll(getTraps());
+            Map<Point, Integer> avoid = new HashMap<>();
+            getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+            getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
             //System.err.println(String.format("[%d] avoid=%s", id, avoid));
 
             // Trap the opponent
@@ -419,17 +428,18 @@ public class Player {
             if (!opponent.hasWeapon() && !opponent.isTrapped() && opponent.canBeTrapped()) {
                 Path toOpponent = getPathToOpponent();
 
-                Set<Point> threats = getPotentialThreats();
+                // Check if an enemy stands in the way of setting the trap
+                Map<Point, Integer> threats = getPotentialThreats();
                 boolean pathHasEnemy = toOpponent.getPositions().stream()
-                        .anyMatch(pos -> threats.contains(pos));
+                        .anyMatch(pos -> threats.containsKey(pos));
 
                 if (toOpponent != null && !pathHasEnemy) {
-                    Set<Point> oppTraps = opponent.getTraps();
+                    Map<Point, Integer> oppTraps = opponent.getTraps();
 
-                    Point destination = oppTraps.contains(this.position) ? this.position : null;
+                    Point destination = oppTraps.containsKey(this.position) ? this.position : null;
                     for (int n : toOpponent.getIntersectionMoves()) {
                         Point pos = toOpponent.position(n);
-                        if (oppTraps.contains(pos))
+                        if (oppTraps.containsKey(pos))
                             destination = pos;
                     }
 
