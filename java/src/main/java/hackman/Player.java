@@ -251,12 +251,13 @@ public class Player {
             // Is the enemy moving away? It's unlikely he will come back this way
             Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
             if (!prevEnemyPositions.isEmpty()) {
-                this.pathsToThreats = this.pathsToThreats.stream()
-                        .filter(toThreat -> {
-                            Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
-                            return !prevEnemyPositions.containsKey(penultimatePos);
-                        })
-                        .collect(Collectors.toList());
+                this.pathsToThreats.removeIf(toThreat -> {
+                    Point pos = toThreat.end();
+                    Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
+
+                    return prevEnemyPositions.containsKey(penultimatePos) &&
+                            prevEnemyPositions.get(penultimatePos) == threats.get(pos);
+                });
             }
             //System.err.println(String.format("[%d] toThreats=%s", id, pathsToThreats));
         }
@@ -501,8 +502,8 @@ public class Player {
 
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
-        //System.err.println("myPaths=" + myPaths);
-        //System.err.println("oppPaths=" + oppPaths);
+        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
+        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", id, p));
 
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
