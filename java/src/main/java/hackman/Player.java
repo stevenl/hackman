@@ -79,6 +79,7 @@ public class Player {
         // Reset cached attributes
         this.toOpponent = null;
         this.pathsToThreats = null;
+        this.threats = null;
         this.immediateThreats = null;
         this.traps = null;
     }
@@ -146,8 +147,13 @@ public class Player {
         threats.putAll(state.getEnemyPositions());
 
         Player opponent = getOpponent();
-        if (opponent.hasWeapon())
-            threats.compute(opponent.getPosition(), (k, v) -> v != null ? v + 1 : 1);
+        if (opponent.hasWeapon()) {
+            Point pos = opponent.getPosition();
+            if (!threats.containsKey(pos))
+                threats.put(pos, 1);
+            else
+                threats.compute(pos, (k, v) -> v + 1);
+        }
 
         //System.err.println(String.format("[%d] potentialThreats=%s", id, threats));
         return threats;
@@ -159,14 +165,26 @@ public class Player {
      *
      * @return The positions of the threats.
      */
+    private Map<Point, Integer> threats = null;
     private Map<Point, Integer> getThreats() {
-        Map<Point, Integer> potentialThreats = getPotentialThreats();
-        Map<Point, Integer> threats = getPathsToThreats().stream()
-                .map(path -> path.end())
-                .collect(Collectors.toMap(pos -> pos, pos -> potentialThreats.get(pos)));
+        if (this.threats == null) {
+            this.threats = new HashMap<>();
+            Map<Point, Integer> potentialThreats = getPotentialThreats();
+            Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
 
-        //System.err.println(String.format("[%d] threats=%s", id, threats));
-        return threats;
+            for (Path toThreat : getPathsToThreats()) {
+                Point pos = toThreat.end();
+                int nrThreats = potentialThreats.get(pos);
+
+                // Don't count the threats that are moving away
+                Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
+                nrThreats -= prevEnemyPositions.getOrDefault(penultimatePos, 0);
+
+                this.threats.put(pos, nrThreats);
+            }
+            //System.err.println(String.format("[%d] threats=%s", id, threats));
+        }
+        return this.threats;
     }
 
     /**
@@ -179,12 +197,21 @@ public class Player {
     private Map<Point, Integer> immediateThreats = null;
     private Map<Point, Integer> getImmediateThreats() {
         if (this.immediateThreats == null) {
-            Map<Point, Integer> threats = getPotentialThreats();
-            this.immediateThreats = getPathsToThreats().stream()
-                    .filter(path -> path.nrMoves() <= 2)
-                    .map(path -> path.position(1))
-                    .distinct()
-                    .collect(Collectors.toMap(pos -> pos, pos -> 1));
+            this.immediateThreats = new HashMap<>();
+            Map<Point, Integer> threats = getThreats();
+
+            for (Path toThreat : getPathsToThreats()) {
+                if (toThreat.nrMoves() > 2)
+                    continue;
+
+                Point pos = toThreat.position(1);
+                int nrThreats = threats.get(toThreat.end());
+
+                if (!this.immediateThreats.containsKey(pos))
+                    this.immediateThreats.put(pos, nrThreats);
+                else
+                    this.immediateThreats.compute(pos, (k, v) -> v + nrThreats);
+            }
             //System.err.println(String.format("[%d] immediate=%s", id, immediateThreats));
         }
         return this.immediateThreats;
@@ -199,7 +226,7 @@ public class Player {
      * @return The positions of the nearby threats
      */
     private Map<Point, Integer> getNearbyThreats() {
-        Map<Point, Integer> threats = getPotentialThreats();
+        Map<Point, Integer> threats = getThreats();
         Map<Point, Integer> nearbyThreats = getPathsToThreats().stream()
                 .filter(path -> path.nrIntersections() < 2)
                 .map(path -> path.end())
@@ -429,7 +456,7 @@ public class Player {
                 Path toOpponent = getPathToOpponent();
 
                 // Check if an enemy stands in the way of setting the trap
-                Map<Point, Integer> threats = getPotentialThreats();
+                Map<Point, Integer> threats = getThreats();
                 boolean pathHasEnemy = toOpponent.getPositions().stream()
                         .anyMatch(pos -> threats.containsKey(pos));
 
