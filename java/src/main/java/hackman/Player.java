@@ -491,7 +491,7 @@ public class Player {
                 for (Path path1 : unsafePaths) {
                     Path path2 = safePaths.get(path1.end());
 
-                    if ((float) path1.nrMoves() < (float) path2.nrMoves() * 0.9)
+                    if (path2 == null || (float) path1.nrMoves() < (float) path2.nrMoves() * 0.9)
                         paths.add(path1);
                     else
                         paths.add(path2);
