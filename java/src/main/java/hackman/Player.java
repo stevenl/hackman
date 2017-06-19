@@ -482,7 +482,20 @@ public class Player {
 
             // Go for a target
             if (paths == null) {
-                paths = state.findShortestPaths(this.position, getTargets(), avoid, false, searchWhile);
+                // Is it worth using up the weapon? Not if it doesn't save many steps to reach the target
+                paths = new ArrayList<>();
+                List<Path> unsafePaths = state.findShortestPaths(this.position, getTargets(), avoid, false, searchWhile);
+                Map<Point, Path> safePaths = state.findShortestPaths(this.position, getTargets(), avoid, true, searchWhile)
+                        .stream().collect(Collectors.toMap(p -> p.end(), p -> p));
+
+                for (Path path1 : unsafePaths) {
+                    Path path2 = safePaths.get(path1.end());
+
+                    if ((float) path1.nrMoves() < (float) path2.nrMoves() * 0.9)
+                        paths.add(path1);
+                    else
+                        paths.add(path2);
+                }
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon2=%s", id, paths.get(0)));
             }
         }

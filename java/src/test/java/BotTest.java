@@ -163,12 +163,16 @@ public class BotTest {
 
     @Test
     public void dontDetourWithWeapon() {
-        // If we have a weapon, we want to weigh up whether avoiding the bug is worth
-        // it. If it means we take too many extra steps then just kill the bug.
+        // If we have a weapon, we can use it to get to the target faster
         this.myPlayer.setWeapon(true);
         String field = ".,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,0,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,E,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,E,.,.,x,x,x,C,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,C,.,.,.,C,.,.,x,x,x,E,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,1,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
         State  state = new State(field, this.players, null, this.game);
         assertEquals(Move.DOWN, myPlayer.doMove());
+
+        // ... but still take the safe route if it isn't a significant detour
+        field = ".,.,.,.,.,.,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,C,.,x,x,x,x,x,x,.,E,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,0,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,1,C,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        state = new State(field, this.players, null, this.game);
+        assertEquals(Move.LEFT, myPlayer.doMove());
         this.myPlayer.setWeapon(false);
     }
 
@@ -271,6 +275,7 @@ public class BotTest {
 
         this.myPlayer.setWeapon(false);
     }
+
 
     //@Test
     //public void boilerplate() {
