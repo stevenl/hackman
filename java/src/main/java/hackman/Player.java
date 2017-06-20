@@ -342,7 +342,7 @@ public class Player {
                 // (Don't count the point we come from)
                 int nrMoveOptions = state.getValidMoves(pos).size() - 1;
                 boolean isIntersection = nrMoveOptions > 1;
-                if (targets.contains(pos) && !isIntersection) {
+                if (targets.contains(pos) && intersectionStack.isEmpty() && !isIntersection) {
                     int movesToTarget = i;
                     int threatToTarget = maxMoves - i;
 
@@ -350,6 +350,10 @@ public class Player {
                     if (movesToTarget >= threatToTarget) {
                         //System.err.println(String.format("trap1=[%d >= %d]=%s", movesToTarget, threatToTarget, pos));
                         this.traps.put(pos, 1);
+                    } else {
+                        // ... or can the threat the block player after reaching the target
+                        intersectionOptions.put(pos, nrMoveOptions);
+                        intersectionStack.addFirst(pos);
                     }
                 }
                 else if (isIntersection) {
