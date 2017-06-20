@@ -565,9 +565,15 @@ public class Player {
         //System.err.println("scores=" + moveScores);
 
         // Choose the move with the highest score
+        // If multiple moves have the same max score, choose one at random
+        // (this is intentionally non-deterministic to avoid deadlock moves)
+        float maxScore = moveScores.values().stream()
+                .max((v1, v2) -> Float.compare(v1, v2))
+                .orElse(null);
         Move move = moveScores.entrySet().stream()
-                .max((e1, e2) -> Float.compare(e1.getValue(), e2.getValue()))
-                .map(e -> e.getKey())
+                .filter(entry -> entry.getValue() == maxScore)
+                .findAny()
+                .map(entry -> entry.getKey())
                 .orElse(null);
 
         //System.err.println("move=" + move);
