@@ -228,9 +228,10 @@ public class Player {
     private Map<Point, Integer> getNearbyThreats() {
         Map<Point, Integer> threats = getThreats();
         Map<Point, Integer> nearbyThreats = getPathsToThreats().stream()
-                .filter(path -> path.nrIntersections() < 2)
+                .filter(path -> path.nrMoves() > 2 && path.nrIntersections() < 2)
                 .map(path -> path.end())
                 .collect(Collectors.toMap(pos -> pos, pos -> threats.get(pos)));
+        nearbyThreats.putAll(getImmediateThreats());
 
         //System.err.println(String.format("[%d] nearby=%s", id, nearbyThreats));
         return nearbyThreats;
@@ -277,7 +278,6 @@ public class Player {
             return true;
 
         Map<Point, Integer> avoid = new HashMap<>();
-        getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
         // Are the paths to the closest intersections blocked?
@@ -294,7 +294,6 @@ public class Player {
      */
     boolean canBeTrapped() {
         Map<Point, Integer> avoid = new HashMap<>();
-        getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
@@ -428,7 +427,6 @@ public class Player {
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
                 Map<Point, Integer> avoid = new HashMap<>();
-                getImmediateThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
                 getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
                 getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
                 //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
@@ -569,7 +567,7 @@ public class Player {
         // (this is intentionally non-deterministic to avoid deadlock moves)
         float maxScore = moveScores.values().stream()
                 .max((v1, v2) -> Float.compare(v1, v2))
-                .orElse(null);
+                .orElse(0.0f);
         Move move = moveScores.entrySet().stream()
                 .filter(entry -> entry.getValue() == maxScore)
                 .findAny()

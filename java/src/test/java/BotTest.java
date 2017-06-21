@@ -204,6 +204,10 @@ public class BotTest {
         state = new State(field, this.players, state, this.game);
         assertEquals(Move.DOWN, myPlayer.doMove());
 
+        // Beware of the second immediate threat
+        field = ".,.,.,.,.,.,.,.,.,C,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,.,x,x,x,.,.,.,x,x,.,.,.,x,x,x,.,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,C,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,1,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,E,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,E,.,.,x,.,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,0,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        state = new State(field, this.players, null, this.game);
+        assertEquals(Move.DOWN, myPlayer.doMove());
         this.myPlayer.setWeapon(false);
     }
 
