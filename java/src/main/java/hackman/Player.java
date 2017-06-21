@@ -429,13 +429,14 @@ public class Player {
             searchWhile = (p -> p.nrMoves() <= 8);
 
         List<Path> paths = null;
+        Map<Point, Integer> avoid = new HashMap<>();
+        getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+        getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+        //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
+
         if (!this.hasWeapon) {
             if (isTrapped()) {
                 // Minimise damage since we can't avoid them completely
-                Map<Point, Integer> avoid = new HashMap<>();
-                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
                 paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe0=%s", id, paths.get(0)));
@@ -443,21 +444,12 @@ public class Player {
 
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
-                Map<Point, Integer> avoid = new HashMap<>();
-                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-                //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
-
                 paths = state.findShortestPaths(this.position, getTargets(), avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
             // Fallback: Going after the target is too dangerous
             if (paths.isEmpty()) {
-                Map<Point, Integer> avoid = new HashMap<>();
-                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-
                 searchWhile = (p -> p.nrMoves() <= 8);
                 paths = state.findShortestPaths(this.position, null, avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
@@ -465,10 +457,6 @@ public class Player {
 
             // Fallback: Minimise damage since we are likely trapped (just don't freeze)
             if (paths.isEmpty()) {
-                Map<Point, Integer> avoid = new HashMap<>();
-                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
                 paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
@@ -476,11 +464,6 @@ public class Player {
         }
         else {
             // With weapon: Allowed to avoid one threat
-            Map<Point, Integer> avoid = new HashMap<>();
-            getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-            getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-            //System.err.println(String.format("[%d] avoid=%s", id, avoid));
-
             // Trap the opponent
             Player opponent = getOpponent();
             if (!opponent.hasWeapon() && !opponent.isTrapped() && opponent.canBeTrapped()) {
