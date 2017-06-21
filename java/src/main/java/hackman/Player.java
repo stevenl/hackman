@@ -249,6 +249,23 @@ public class Player {
             Map<Point, Integer> threats = getPotentialThreats();
             this.pathsToThreats = state.findShortestPaths(this.position, threats.keySet(), null, true, null);
 
+            // Is the threat at an intersection? Consider alternatives routes to reach them
+            Set<Point> threatsAtIntersections = new HashSet<>();
+            Map<Point, Integer> pathsToAvoid = new HashMap<>();
+            for (Path toThreat : this.pathsToThreats) {
+                Point threat = toThreat.end();
+                boolean isThreatAtIntersection = state.getValidMoves(threat).size() > 2;
+
+                if (isThreatAtIntersection) {
+                    threatsAtIntersections.add(threat);
+
+                    Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
+                    pathsToAvoid.put(penultimatePos, 1);
+                }
+            }
+            List<Path> altPathsToThreats = state.findShortestPaths(this.position, threatsAtIntersections, pathsToAvoid, true, null);
+            this.pathsToThreats.addAll(altPathsToThreats);
+
             // Is the enemy moving away? It's unlikely he will come back this way
             Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
             if (!prevEnemyPositions.isEmpty()) {
