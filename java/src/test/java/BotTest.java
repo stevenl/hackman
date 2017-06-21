@@ -184,6 +184,13 @@ public class BotTest {
     }
 
     @Test
+    public void keepMovingWhenAlmostTrapped() {
+        String field = ".,.,0,E,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,.,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,E,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,.,.,x,1,x,x,x,.,.,.,x,x,.,.,.,x,x,x,.,x,C,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,.,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,.,.,.,x,.,x,x,.,.,C,x,x,x,.,x,x,x,x,x,x,.,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        State  state = new State(field, this.players, null, this.game);
+        assertNotEquals(Move.PASS, myPlayer.doMove());
+    }
+
+    @Test
     public void dontDetourWithWeapon() {
         // If we have a weapon, we can use it to get to the target faster
         this.myPlayer.setWeapon(true);

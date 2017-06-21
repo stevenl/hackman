@@ -462,6 +462,17 @@ public class Player {
                 paths = state.findShortestPaths(this.position, null, avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
+
+            // Fallback: Minimise damage since we are likely trapped (just don't freeze)
+            if (paths.isEmpty()) {
+                Map<Point, Integer> avoid = new HashMap<>();
+                getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+                getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
+
+                searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
+                paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
+                //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
+            }
         }
         else {
             // With weapon: Allowed to avoid one threat
