@@ -34,6 +34,7 @@ public class Path {
     private Point end;
     private List<Move> moves;
     private List<Point> positions;
+    private Map<Integer, Integer> threatsByMove; // moveNr : nrThreats
     private List<Integer> intersectionMoves;
 
     private Path() {
@@ -42,6 +43,7 @@ public class Path {
 
         this.moves     = new ArrayList<>();
         this.positions = new ArrayList<>();
+        this.threatsByMove = new HashMap<>();
         this.intersectionMoves = new ArrayList<>();
     }
 
@@ -52,34 +54,35 @@ public class Path {
         this.positions.add(start);
     }
 
-    public Path(Path path, Move nextMove, Field field) {
-        this();
+    public Path(Path path, Point nextPosition, Move nextMove, int nrThreats, Field field) {
+        this(path);
 
-        this.start = path.start;
-        this.end   = new Point(path.end, nextMove);
+        if (!field.isPointValid(nextPosition))
+            throw new RuntimeException("Invalid point: " + nextPosition);
 
-        if (!field.isPointValid(this.end))
-            throw new RuntimeException("Invalid point: " + this.end);
+        this.end = nextPosition;
+        this.positions.add(nextPosition);
 
-        this.moves.addAll(path.moves);
         this.moves.add(nextMove);
 
-        this.positions.addAll(path.positions);
-        this.positions.add(this.end);
+        this.threatsByMove.put(this.moves.size(), nrThreats);
 
-        this.intersectionMoves.addAll(path.intersectionMoves);
-
-        boolean isIntersection = field.getValidMoves(this.end).size() > 2;
+        boolean isIntersection = field.getValidMoves(nextPosition).size() > 2;
         if (isIntersection) this.intersectionMoves.add(this.moves.size());
     }
 
-    private Path(Point start, Point end, List<Move> moves, List<Point> positions, List<Integer> intersectionMoves) {
+    private Path(Path toCopy) {
+        this(toCopy.start, toCopy.end, toCopy.moves, toCopy.positions, toCopy.threatsByMove, toCopy.intersectionMoves);
+    }
+
+    private Path(Point start, Point end, List<Move> moves, List<Point> positions, Map<Integer, Integer> threatsByMove, List<Integer> intersectionMoves) {
         this();
         this.start = start;
         this.end   = end;
 
         this.moves.addAll(moves);
         this.positions.addAll(positions);
+        this.threatsByMove.putAll(threatsByMove);
         this.intersectionMoves.addAll(intersectionMoves);
     }
 
@@ -87,6 +90,7 @@ public class Path {
         List<Move> moves = new ArrayList<>();
         List<Point> positions = new ArrayList<>();
         List<Integer> intersectionMoves = new ArrayList<>();
+        Map<Integer, Integer> threatsByMove = new HashMap<>();
 
         // Find the starting point
         int i = 0;
@@ -115,6 +119,9 @@ public class Path {
                 }
             }
 
+            if (j > i && this.threatsByMove.containsKey(j))
+                threatsByMove.put(j - i, this.threatsByMove.get(j));
+
             if (pos.equals(end))
                 break;
 
@@ -124,7 +131,7 @@ public class Path {
         if (j == nrMoves())
             throw new RuntimeException("end point is not in the path: " + end);
 
-        Path subPath = new Path(start, end, moves, positions, intersectionMoves);
+        Path subPath = new Path(start, end, moves, positions, threatsByMove, intersectionMoves);
 
         return subPath;
     }
@@ -177,6 +184,14 @@ public class Path {
             i++;
         }
         throw new RuntimeException("Path does not contains the position: " + pos);
+    }
+
+    float getThreatScore() {
+        float score = 0;
+        for (Map.Entry<Integer, Integer> e : this.threatsByMove.entrySet())
+            score += (float) e.getValue() / e.getKey(); // nrThreat / nrMoves
+
+        return score;
     }
 
     public List<Integer> getIntersectionMoves() {

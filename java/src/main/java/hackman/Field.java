@@ -207,14 +207,15 @@ class Field {
             Set<Move> validMoves = this.getValidMoves(path.end());
 
             for (Move nextMove : validMoves) {
-                Path nextPath = new Path(path, nextMove, this);
+                Point nextPosition = new Point(path.end(), nextMove);
+                int nrThreats = avoid.getOrDefault(nextPosition, 0);
+                Path nextPath = new Path(path, nextPosition, nextMove, nrThreats, this);
 
                 if (!searchWhile.test(nextPath)) {
                     paths.add(path);
                     continue search;
                 }
 
-                Point nextPosition = nextPath.end();
                 if (visited.contains(nextPosition))
                     continue;
 
