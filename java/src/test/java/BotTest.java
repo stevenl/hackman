@@ -314,6 +314,13 @@ public class BotTest {
         this.myPlayer.setWeapon(false);
     }
 
+    @Test
+    public void goForMultipleTargets() {
+        // Go in the direction that has the most number of targets
+        String field = ".,.,.,.,.,C,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,x,x,C,x,x,x,x,x,x,.,x,x,x,x,x,.,.,x,.,.,.,.,.,x,x,x,x,x,x,.,.,.,.,.,x,C,.,x,.,x,x,x,.,.,.,x,x,W,.,.,x,x,x,C,x,.,.,.,.,.,.,x,x,x,.,x,x,.,x,x,x,.,.,.,C,.,.,x,x,x,.,x,.,.,.,.,.,.,.,.,x,.,x,x,x,.,.,.,.,x,.,x,.,x,x,x,x,x,x,.,x,.,x,.,.,.,x,x,.,x,.,.,.,x,x,x,x,x,x,0,.,.,x,1,x,x,.,.,.,x,x,x,.,x,x,x,x,x,x,EE,x,x,x,.,.,.,.,x,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,x,.,.,x,x,x,.,x,x,x,x,x,x,x,x,x,x,.,x,x,x,.,.,x,x,x,.,.,.,.,.,.,.,.,.,.,.,.,x,x,x,.,.,x,x,x,.,x,x,x,.,x,x,.,x,x,x,.,x,x,x,.,.,.,.,.,.,.,.,.,.,x,x,.,.,.,.,.,.,.,.,.";
+        State  state = new State(field, this.players, null, this.game);
+        assertEquals(Move.RIGHT, myPlayer.doMove());
+    }
 
     //@Test
     //public void boilerplate() {
