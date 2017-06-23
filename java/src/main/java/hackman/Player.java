@@ -461,6 +461,7 @@ public class Player {
                     List<Path> paths1 = state.findShortestPaths(this.position, getTargets(), avoid1, true, searchWhile);
                     paths.addAll(paths1);
                 }
+                paths.sort(Comparator.comparing(Path::nrMoves).thenComparing(Path::nrThreats));
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
@@ -552,7 +553,7 @@ public class Player {
         int i = 1;
         for (Path oppPath : oppPaths) {
             Point target = oppPath.end();
-            oppPathsByTarget.put(target, oppPath);
+            oppPathsByTarget.putIfAbsent(target, oppPath); // Consider the first (shortest) path only
             oppPathRank.put(target, i++);
         }
 

@@ -186,6 +186,10 @@ public class Path {
         throw new RuntimeException("Path does not contains the position: " + pos);
     }
 
+    int nrThreats() {
+        return this.threatsByMove.size();
+    }
+
     float getThreatScore() {
         float score = 0;
         for (Map.Entry<Integer, Integer> e : this.threatsByMove.entrySet())
