@@ -444,24 +444,7 @@ public class Player {
 
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
-                paths = new ArrayList<>();
-                Set<Point> nextPositions = state.getValidMoves(this.position).stream()
-                        .map(move -> new Point(this.position, move))
-                        .collect(Collectors.toSet());
-                for (Point pos : nextPositions) {
-                    Map<Point, Integer> avoid1 = new HashMap<>(avoid);
-                    for (Point toAvoid : nextPositions) {
-                        if (toAvoid.equals(pos))
-                            continue;
-                        if (avoid1.containsKey(toAvoid))
-                            avoid1.compute(toAvoid, (k, v) -> v + 1);
-                        else
-                            avoid1.put(toAvoid, 1);
-                    }
-                    List<Path> paths1 = state.findShortestPaths(this.position, getTargets(), avoid1, true, searchWhile);
-                    paths.addAll(paths1);
-                }
-                paths.sort(Comparator.comparing(Path::nrMoves).thenComparing(Path::nrThreats));
+                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, true, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 

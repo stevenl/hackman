@@ -22,6 +22,7 @@ package hackman;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * hackman.Field
@@ -236,6 +237,49 @@ class Field {
             }
         }
         return paths;
+    }
+
+    /**
+     * In addition to findShortestPath(), this method considers the shortest
+     * paths to each target for each move direction. Effectively, it will
+     * produce alternative paths to the targets.
+     *
+     * @param origin      The starting position (e.g. my current position)
+     * @param targets     The set of end positions to aim for (e.g. snippet positions)
+     * @param avoid       The set of positions to avoid (e.g. threats)
+     * @param strictMode  If false, then we allow one encounter with a point that should be avoided
+     * @param searchWhile A predicate that defines the condition for when the search can continue
+     * @return A list of Paths to the targets. Each target may have multiple paths. The list is in increasing order of distance.
+     */
+
+    List<Path> findShortestPathsPerDirection(Point origin, Set<Point> targets, Map<Point, Integer> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+        List<Path> allPaths = new ArrayList<>();
+
+        Set<Point> nextPositions = this.getValidMoves(origin).stream()
+                .map(move -> new Point(origin, move))
+                .collect(Collectors.toSet());
+
+        for (Point pos : nextPositions) {
+            Map<Point, Integer> avoid1 = new HashMap<>(avoid);
+
+            // Avoid all other directions so we can consider the paths to each target if we move this way
+            for (Point wantToAvoid : nextPositions) {
+                if (wantToAvoid.equals(pos))
+                    continue;
+
+                if (avoid1.containsKey(wantToAvoid))
+                    avoid1.compute(wantToAvoid, (k, v) -> v + 999);
+                else
+                    avoid1.put(wantToAvoid, 999);
+            }
+
+            List<Path> paths = this.findShortestPaths(origin, targets, avoid1, strictMode, searchWhile);
+            allPaths.addAll(paths);
+        }
+
+        allPaths.sort(Comparator.comparing(Path::nrMoves).thenComparing(Path::nrThreats));
+
+        return allPaths;
     }
 
     /**
