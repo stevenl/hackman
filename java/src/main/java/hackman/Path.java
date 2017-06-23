@@ -65,7 +65,7 @@ public class Path {
 
         this.moves.add(nextMove);
 
-        this.threatsByMove.put(this.moves.size(), nrThreats);
+        if (nrThreats > 0) this.threatsByMove.put(this.moves.size(), nrThreats);
 
         boolean isIntersection = field.getValidMoves(nextPosition).size() > 2;
         if (isIntersection) this.intersectionMoves.add(this.moves.size());
