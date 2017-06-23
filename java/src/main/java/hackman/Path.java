@@ -221,6 +221,6 @@ public class Path {
 
     @Override
     public String toString() {
-        return String.format("%s, %s: %s", this.start, this.end, this.moves);
+        return String.format("%s, %s: [%d]%s", this.start, this.end, this.nrMoves(), this.moves);
     }
 }
