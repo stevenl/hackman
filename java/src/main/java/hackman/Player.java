@@ -70,6 +70,7 @@ public class Player {
     }
 
     void setPosition(Point position) {
+        if (position == null) throw new NullPointerException();
         this.position = position;
     }
 

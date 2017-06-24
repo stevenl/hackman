@@ -54,10 +54,10 @@ public class Path {
         this.positions.add(start);
     }
 
-    public Path(Path path, Point nextPosition, Move nextMove, int nrThreats, Field field) {
+    public Path(Path path, Point nextPosition, Move nextMove, int nrThreats, State state) {
         this(path);
 
-        if (!field.isPointValid(nextPosition))
+        if (!state.isPointValid(nextPosition))
             throw new RuntimeException("Invalid point: " + nextPosition);
 
         this.end = nextPosition;
@@ -67,7 +67,7 @@ public class Path {
 
         if (nrThreats > 0) this.threatsByMove.put(this.moves.size(), nrThreats);
 
-        boolean isIntersection = field.getValidMoves(nextPosition).size() > 2;
+        boolean isIntersection = state.getValidMoves(nextPosition).size() > 2;
         if (isIntersection) this.intersectionMoves.add(this.moves.size());
     }
 
