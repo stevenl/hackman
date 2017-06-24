@@ -253,6 +253,14 @@ class Field {
      */
 
     List<Path> findShortestPathsPerDirection(Point origin, Set<Point> targets, Map<Point, Integer> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+        // Parameter defaults
+        if (targets == null)
+            targets = new HashSet<>();
+        if (avoid == null)
+            avoid = new HashMap<>();
+        if (searchWhile == null)
+            searchWhile = (p -> true);
+
         List<Path> allPaths = new ArrayList<>();
 
         Set<Point> nextPositions = this.getValidMoves(origin).stream()

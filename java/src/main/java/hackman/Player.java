@@ -180,7 +180,8 @@ public class Player {
                 Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
                 nrThreats -= prevEnemyPositions.getOrDefault(penultimatePos, 0);
 
-                this.threats.put(pos, nrThreats);
+                this.threats.putIfAbsent(pos, nrThreats);
+                // Count the first one - there are multiple paths to the same threat
             }
             //System.err.println(String.format("[%d] threats=%s", id, threats));
         }
@@ -230,6 +231,7 @@ public class Player {
         Map<Point, Integer> nearbyThreats = getPathsToThreats().stream()
                 .filter(path -> path.nrMoves() > 2 && path.nrIntersections() < 2)
                 .map(path -> path.end())
+                .distinct()
                 .collect(Collectors.toMap(pos -> pos, pos -> threats.get(pos)));
         nearbyThreats.putAll(getImmediateThreats());
 
@@ -247,24 +249,16 @@ public class Player {
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
             Map<Point, Integer> threats = getPotentialThreats();
-            this.pathsToThreats = state.findShortestPaths(this.position, threats.keySet(), null, true, null);
+            this.pathsToThreats = state.findShortestPathsPerDirection(this.position, threats.keySet(), null, true, null);
 
-            // Is the threat at an intersection? Consider alternatives routes to reach them
-            Set<Point> threatsAtIntersections = new HashSet<>();
-            Map<Point, Integer> pathsToAvoid = new HashMap<>();
-            for (Path toThreat : this.pathsToThreats) {
+            // Is the path too round-about? It's unlikely the threat will come that way
+            Map<Point, Integer> minDistancePerThreat = new HashMap<>();
+            for (Path toThreat : this.pathsToThreats)
+                minDistancePerThreat.putIfAbsent(toThreat.end(), toThreat.nrMoves());
+            this.pathsToThreats.removeIf(toThreat -> {
                 Point threat = toThreat.end();
-                boolean isThreatAtIntersection = state.getValidMoves(threat).size() > 2;
-
-                if (isThreatAtIntersection) {
-                    threatsAtIntersections.add(threat);
-
-                    Point penultimatePos = toThreat.position(toThreat.nrMoves() - 1);
-                    pathsToAvoid.put(penultimatePos, 1);
-                }
-            }
-            List<Path> altPathsToThreats = state.findShortestPaths(this.position, threatsAtIntersections, pathsToAvoid, true, null);
-            this.pathsToThreats.addAll(altPathsToThreats);
+                return toThreat.nrMoves() > minDistancePerThreat.get(threat) * 2;
+            });
 
             // Is the enemy moving away? It's unlikely he will come back this way
             Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
@@ -277,7 +271,7 @@ public class Player {
                             prevEnemyPositions.get(penultimatePos) == threats.get(pos);
                 });
             }
-            //System.err.println(String.format("[%d] toThreats=%s", id, pathsToThreats));
+            //for (Path p : pathsToThreats) System.err.println(String.format("toThreats[%d]=%s", id, p));
         }
         return this.pathsToThreats;
     }
@@ -432,7 +426,8 @@ public class Player {
         Map<Point, Integer> avoid = new HashMap<>();
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
-        //System.err.println(String.format("[%d] avoid1=%s", id, avoid));
+        //System.err.println(String.format("[%d] nearby=%s", id, getNearbyThreats()));
+        //System.err.println(String.format("[%d] traps=%s", id, getTraps()V));
 
         if (!this.hasWeapon) {
             if (isTrapped()) {
@@ -516,10 +511,6 @@ public class Player {
 
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
-        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
-        //System.err.println();
-        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", getOpponent().id, p));
-        //System.err.println();
 
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
@@ -570,6 +561,10 @@ public class Player {
 
             moveScores.put(move, newScore);
         }
+        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", getOpponent().id, p));
+        //System.err.println();
+        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
+        //System.err.println();
         //System.err.println("scores=" + moveScores);
 
         // Choose the move with the highest score
