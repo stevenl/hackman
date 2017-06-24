@@ -516,8 +516,10 @@ public class Player {
 
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
-        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s\n", id, p));
-        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s\n", id, p));
+        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
+        //System.err.println();
+        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", getOpponent().id, p));
+        //System.err.println();
 
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
