@@ -516,15 +516,19 @@ public class Player {
 
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
-        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
-        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", id, p));
+        //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s\n", id, p));
+        //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s\n", id, p));
 
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
         int i = 1;
         for (Path oppPath : oppPaths) {
             Point target = oppPath.end();
-            oppPathsByTarget.putIfAbsent(target, oppPath); // Consider the first (shortest) path only
+
+            // Consider the first (shortest) path only
+            if (oppPathsByTarget.containsKey(target)) continue;
+
+            oppPathsByTarget.put(target, oppPath);
             oppPathRank.put(target, i++);
         }
 
@@ -549,7 +553,7 @@ public class Player {
                 // Cut our losses: Ditch targets that opponent can get to first
                 if (oppPath.nrMoves() < myPath.nrMoves()) {
                     int pathRank = oppPathRank.get(target);
-                    score *= 1.0f - (1.0f / pathRank * 1.4);
+                    score *= 1.0f - (1.0f / pathRank);
                 }
                 // Don't let him have any: Prefer targets nearer to opponent
                 else if (meetingPoint != null && oppPath.getMoveNr(meetingPoint) < nrMovesToOpponent) {
