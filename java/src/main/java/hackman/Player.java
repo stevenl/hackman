@@ -553,7 +553,8 @@ public class Player {
                 // Cut our losses: Ditch targets that opponent can get to first
                 if (oppPath.nrMoves() < myPath.nrMoves()) {
                     int pathRank = oppPathRank.get(target);
-                    score *= 1.0f - (1.0f / pathRank);
+                    score *= 1.0f - (0.98f / pathRank);
+                    // 0.98 is so we don't have equal 0 scores in each direction when there is only one target
                 }
                 // Don't let him have any: Prefer targets nearer to opponent
                 else if (meetingPoint != null && oppPath.getMoveNr(meetingPoint) < nrMovesToOpponent) {
