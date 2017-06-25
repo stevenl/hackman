@@ -521,6 +521,17 @@ public class Player {
         //System.err.println("myPath=" + myPaths.get(0));
         //System.err.println("oppPath=" + oppPaths.get(0));
 
+        Map<Move, List<Path>> myPathsPerDirection = new HashMap<>();
+        for (Path myPath : myPaths) {
+            Move move = myPath.nrMoves() > 0 ? myPath.move(0) : Move.PASS;
+
+            myPathsPerDirection.putIfAbsent(move, new ArrayList<>());
+            myPathsPerDirection.get(move).add(myPath);
+        }
+
+        Set<Point> targets = this.getTargets();
+        Map<Move, Integer> targetsPerDirection = new HashMap<>();
+
         Map<Point, Path> oppPathsByTarget = new HashMap<>();
         Map<Point, Integer> oppPathRank = new HashMap<>();
         int i = 1;
@@ -538,38 +549,53 @@ public class Player {
         int nrMovesToOpponent = toOpponent != null ? toOpponent.nrMoves() : 0;
 
         Map<Move, Float> moveScores = new HashMap<>();
-        for (Path myPath : myPaths) {
-            Point target = myPath.end();
-            Path oppPath = oppPathsByTarget.get(target);
+        for (Move move : myPathsPerDirection.keySet()) {
+            targetsPerDirection.put(move, 0);
 
-            float score = 1.0f / myPath.nrMoves();
+            for (Path myPath : myPathsPerDirection.get(move)) {
+                Point target = myPath.end();
+                if (targets.contains(target))
+                    targetsPerDirection.compute(move, (k, v) -> v + 1);
 
-            // More threats encountered means lower score
-            if (myPath.nrThreats() > 0)
-                score *= Math.pow(0.9, myPath.nrThreats());
+                float pathScore = 1.0f / myPath.nrMoves();
 
-            if (oppPath != null) {
-                List<Point> intersectingPoints = myPath.getIntersectingPoints(oppPath);
-                Point meetingPoint = intersectingPoints.size() > 0 ? intersectingPoints.get(0) : null;
+                // More threats encountered means lower score
+                if (myPath.nrThreats() > 0)
+                    pathScore *= Math.pow(0.9, myPath.nrThreats());
 
-                // Cut our losses: Ditch targets that opponent can get to first
-                if (oppPath.nrMoves() < myPath.nrMoves()) {
-                    int pathRank = oppPathRank.get(target);
-                    score *= 1.0f - (0.98f / pathRank);
-                    // 0.98 is so we don't have equal 0 scores in each direction when there is only one target
+                Path oppPath = oppPathsByTarget.get(target);
+                if (oppPath != null) {
+                    List<Point> intersectingPoints = myPath.getIntersectingPoints(oppPath);
+                    Point meetingPoint = intersectingPoints.size() > 0 ? intersectingPoints.get(0) : null;
+
+                    // Cut our losses: Ditch targets that opponent can get to first
+                    if (oppPath.nrMoves() < myPath.nrMoves()) {
+                        int pathRank = oppPathRank.get(target);
+                        pathScore *= 1.0f - (0.98f / pathRank);
+                        // 0.98 is so we don't have equal 0 scores in each direction when there is only one target
+                    }
+                    // Don't let him have any: Prefer targets nearer to opponent
+                    else if (meetingPoint != null && oppPath.getMoveNr(meetingPoint) < nrMovesToOpponent) {
+                        pathScore *= 1.55;
+                    }
                 }
-                // Don't let him have any: Prefer targets nearer to opponent
-                else if (meetingPoint != null && oppPath.getMoveNr(meetingPoint) < nrMovesToOpponent) {
-                    score *= 1.55;
-                }
+
+                float score = moveScores.getOrDefault(move, 0.0f);
+                moveScores.put(move, score + pathScore);
             }
 
-            Move move = myPath.nrMoves() > 0 ? myPath.move(0) : Move.PASS;
-            float newScore = moveScores.getOrDefault(move, 0.0f);
-            newScore += score;
-
-            moveScores.put(move, newScore);
+            // Multiple paths that don't lead to any targets should not multiply
+            // the score - calculate an average instead
+            int nrPaths = myPathsPerDirection.get(move).size();
+            if (targetsPerDirection.get(move) < nrPaths) {
+                float score = moveScores.get(move);
+                if (targetsPerDirection.get(move) == 0)
+                    moveScores.put(move, score / nrPaths);
+                else
+                    moveScores.put(move, score / nrPaths * targetsPerDirection.get(move));
+            }
         }
+
         //for (Path p : oppPaths) System.err.println(String.format("[%d] oppPath=%s", getOpponent().id, p));
         //System.err.println();
         //for (Path p : myPaths) System.err.println(String.format("[%d] myPath=%s", id, p));
