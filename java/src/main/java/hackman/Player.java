@@ -332,7 +332,8 @@ public class Player {
         Set<Point> targets = this.getTargets();
 
         Map<Point, Integer> intersectionOptions = new HashMap<>();
-        for (Path toThreat : getPathsToThreats()) {
+        List<Path> pathsToThreats = getPathsToThreats();
+        for (Path toThreat : pathsToThreats) {
             int maxMoves = toThreat.nrMoves();
 
             // These have already been detected as immediate threats and we want to
@@ -360,10 +361,17 @@ public class Player {
                     if (movesToTarget >= threatToTarget) {
                         //System.err.println(String.format("trap1=[%d >= %d]=%s", movesToTarget, threatToTarget, pos));
                         this.traps.put(pos, 1);
-                    } else {
-                        // ... or can the threat the block player after reaching the target
-                        intersectionOptions.put(pos, nrMoveOptions);
-                        intersectionStack.addFirst(pos);
+                    }
+                    // ... or can threats trap the player in while it's reaching for the target?
+                    else {
+                        // Check the threats from behind
+                        List<Path> pathsToTraps = pathsToThreats.stream()
+                                .filter(toTrap -> toTrap != toThreat && toTrap.nrMoves() <= 2 * movesToTarget)
+                                .collect(Collectors.toList());
+                        if (!pathsToTraps.isEmpty()) {
+                            intersectionOptions.put(pos, nrMoveOptions);
+                            intersectionStack.addFirst(pos);
+                        }
                     }
                 }
                 // Is it an intersection? (not counting the point we come from)
