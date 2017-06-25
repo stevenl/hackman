@@ -348,12 +348,11 @@ public class Player {
             Deque<Point> intersectionStack = new ArrayDeque<>();
             for (int i = 1; i <= maxMoves; i++) {
                 Point pos = toThreat.position(i);
-
-                // Is it an intersection?
-                // (Don't count the point we come from)
                 int nrMoveOptions = state.getValidMoves(pos).size() - 1;
                 boolean isIntersection = nrMoveOptions > 1;
-                if (targets.contains(pos) && intersectionStack.isEmpty() && !isIntersection) {
+
+                // Is it a target? We don't want to be trapped while getting it
+                if (targets.contains(pos) && intersectionStack.isEmpty()) {
                     int movesToTarget = i;
                     int threatToTarget = maxMoves - i;
 
@@ -367,6 +366,7 @@ public class Player {
                         intersectionStack.addFirst(pos);
                     }
                 }
+                // Is it an intersection? (not counting the point we come from)
                 else if (isIntersection) {
                     if (!intersectionOptions.containsKey(pos))
                         intersectionOptions.put(pos, nrMoveOptions);
