@@ -217,11 +217,11 @@ public class State {
      * @param origin      The starting position (e.g. my current position)
      * @param targets     The set of end positions to aim for (e.g. snippet positions)
      * @param avoid       The set of positions to avoid (e.g. threats)
-     * @param strictMode  If false, then we allow one encounter with a point that should be avoided
+     * @param threatsAllowed The number of encounters with threats that the player is allowed
      * @param searchWhile A predicate that defines the condition for when the search can continue
      * @return A list of Paths to each of the targets. The list is in increasing order of distance.
      */
-    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Map<Point, Integer> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+    public List<Path> findShortestPaths(Point origin, Set<Point> targets, Map<Point, Integer> avoid, int threatsAllowed, Predicate<Path> searchWhile) {
         // Parameter defaults
         if (targets == null)
             targets = new HashSet<>();
@@ -261,8 +261,8 @@ public class State {
 
                 int newUnavoided = unavoided;
                 if (avoid.containsKey(nextPosition)) {
-                    if (!strictMode && newUnavoided == 0 && avoid.get(nextPosition) == 1)
-                        newUnavoided++;
+                    if (newUnavoided + avoid.get(nextPosition) <= threatsAllowed)
+                        newUnavoided += avoid.get(nextPosition);
                     else
                         continue; // We've reached a position to avoid - Don't add this path
                 }
@@ -286,12 +286,12 @@ public class State {
      * @param origin      The starting position (e.g. my current position)
      * @param targets     The set of end positions to aim for (e.g. snippet positions)
      * @param avoid       The set of positions to avoid (e.g. threats)
-     * @param strictMode  If false, then we allow one encounter with a point that should be avoided
+     * @param threatsAllowed The number of encounters with threats that the player is allowed
      * @param searchWhile A predicate that defines the condition for when the search can continue
      * @return A list of Paths to the targets. Each target may have multiple paths. The list is in increasing order of distance.
      */
 
-    List<Path> findShortestPathsPerDirection(Point origin, Set<Point> targets, Map<Point, Integer> avoid, boolean strictMode, Predicate<Path> searchWhile) {
+    List<Path> findShortestPathsPerDirection(Point origin, Set<Point> targets, Map<Point, Integer> avoid, int threatsAllowed, Predicate<Path> searchWhile) {
         // Parameter defaults
         if (targets == null)
             targets = new HashSet<>();
@@ -320,7 +320,7 @@ public class State {
                     avoid1.put(wantToAvoid, 999);
             }
 
-            List<Path> paths = this.findShortestPaths(origin, targets, avoid1, strictMode, searchWhile);
+            List<Path> paths = this.findShortestPaths(origin, targets, avoid1, threatsAllowed, searchWhile);
             allPaths.addAll(paths);
         }
 

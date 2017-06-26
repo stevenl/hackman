@@ -108,7 +108,7 @@ public class Player {
         if (this.toOpponent == null) {
             Set<Point> targets = new HashSet<>();
             targets.add(getOpponent().getPosition());
-            this.toOpponent = state.findShortestPaths(this.position, targets, null, true, null);
+            this.toOpponent = state.findShortestPaths(this.position, targets, null, 0, null);
         }
 
         if (!this.toOpponent.isEmpty())
@@ -250,7 +250,7 @@ public class Player {
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
             Map<Point, Integer> threats = getPotentialThreats();
-            this.pathsToThreats = state.findShortestPathsPerDirection(this.position, threats.keySet(), null, true, null);
+            this.pathsToThreats = state.findShortestPathsPerDirection(this.position, threats.keySet(), null, 0, null);
 
             // Is the path too round-about? It's unlikely the threat will come that way
             Map<Point, Integer> minDistancePerThreat = new HashMap<>();
@@ -285,7 +285,7 @@ public class Player {
      */
     boolean isTrapped() {
         // Am I surrounded by immediate threats?
-        List<Path> escapePaths = state.findShortestPaths(this.position, null, getImmediateThreats(), true, p -> p.nrMoves() < 3);
+        List<Path> escapePaths = state.findShortestPaths(this.position, null, getImmediateThreats(), 0, p -> p.nrMoves() < 3);
         if (escapePaths.isEmpty())
             return true;
 
@@ -293,7 +293,7 @@ public class Player {
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
         // Are the paths to the closest intersections blocked?
-        escapePaths = state.findShortestPaths(this.position, null, avoid, true, p -> p.nrIntersections() == 0);
+        escapePaths = state.findShortestPaths(this.position, null, avoid, 0, p -> p.nrIntersections() == 0);
 
         //System.err.println(String.format("[%d] escape=%s", id, escapePaths));
         return escapePaths.isEmpty();
@@ -309,7 +309,8 @@ public class Player {
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
-        List<Path> escapePaths = state.findShortestPaths(this.position, null, avoid, !hasWeapon(), p -> p.nrIntersections() < 2);
+        int threatsAllowed = hasWeapon() ? 1 : 0;
+        List<Path> escapePaths = state.findShortestPaths(this.position, null, avoid, threatsAllowed, p -> p.nrIntersections() < 2);
         return escapePaths.isEmpty();
     }
 
@@ -442,27 +443,27 @@ public class Player {
             if (isTrapped()) {
                 // Minimise damage since we can't avoid them completely
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
-                paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
+                paths = state.findShortestPaths(this.position, null, avoid, 5, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe0=%s", id, paths.get(0)));
             }
 
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
-                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, true, searchWhile);
+                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, 0, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
             // Fallback: Going after the target is too dangerous
             if (paths.isEmpty()) {
                 searchWhile = (p -> p.nrMoves() <= 8);
-                paths = state.findShortestPaths(this.position, null, avoid, true, searchWhile);
+                paths = state.findShortestPaths(this.position, null, avoid, 0, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
 
             // Fallback: Minimise damage since we are likely trapped (just don't freeze)
             if (paths.isEmpty()) {
                 searchWhile = (p -> p.nrMoves() <= 8 || p.nrIntersections() < 2);
-                paths = state.findShortestPaths(this.position, null, avoid, false, searchWhile);
+                paths = state.findShortestPaths(this.position, null, avoid, 5, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe3=%s", id, paths.get(0)));
             }
         }
@@ -508,7 +509,7 @@ public class Player {
             // Go for a target
             if (paths == null) {
                 // Is it worth using up the weapon? Not if it doesn't save many steps to reach the target
-                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, false, searchWhile);
+                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, 1, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon2=%s", id, paths.get(0)));
             }
         }
