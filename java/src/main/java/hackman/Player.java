@@ -480,7 +480,6 @@ public class Player {
 
                 if (toOpponent != null && !pathHasEnemy) {
                     Map<Point, Integer> oppTraps = opponent.getTraps();
-
                     Point destination = oppTraps.containsKey(this.position) ? this.position : null;
                     for (int n : toOpponent.getIntersectionMoves()) {
                         Point pos = toOpponent.position(n);
@@ -488,11 +487,20 @@ public class Player {
                             destination = pos;
                     }
 
+                    // Set the trap
                     if (destination != null) {
                         paths = new ArrayList<>();
                         Path toSetTrap = toOpponent.subPath(this.position, destination);
                         paths.add(toSetTrap);
                         //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon1=%s", id, paths.get(0)));
+                    }
+                    // ... or stay put if player is already there
+                    else {
+                        Map<Point, Integer> oppThreats = opponent.getThreats();
+                        if (oppThreats.containsKey(this.position)) {
+                            paths = new ArrayList<>();
+                            paths.add(new Path(this.position));
+                        }
                     }
                 }
             }
