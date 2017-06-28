@@ -30,6 +30,12 @@ import java.util.stream.Collectors;
  */
 public class State {
 
+    private class Pair<K, V> extends AbstractMap.SimpleImmutableEntry<K, V> {
+        Pair(K key, V value) {
+            super(key, value);
+        }
+    }
+
     private State prevState;
     private Player myPlayer;
     private Player oppPlayer;
@@ -207,6 +213,69 @@ public class State {
 
         return x >= 0 && x < this.width && y >= 0 && y < this.height &&
                 !this.field[x][y].contains("x");
+    }
+
+    List<Path> findPaths(Point origin, Set<Point> targets, Map<Point, Integer> threats, int threatsAllowed, Predicate<Path> searchWhile) {
+        // Parameter defaults
+        if (targets == null)
+            targets = new HashSet<>();
+        if (threats == null)
+            threats = new HashMap<>();
+        if (searchWhile == null)
+            searchWhile = (path -> path.nrMoves() < this.height + this.width);
+
+        List<Path> paths = new ArrayList<>();
+
+        Deque<Pair<Path, Integer>> stack = new ArrayDeque<>();
+        Path start = new Path(origin);
+        stack.addFirst(new Pair<>(start, 0));
+
+        while (stack.peekFirst() != null) {
+            Pair<Path, Integer> pair = stack.removeFirst();
+            Path currPath = pair.getKey();
+            Point currPos = currPath.end();
+            int currNrThreats = pair.getValue();
+
+            Set<Move> validMoves = this.getValidMoves(currPos);
+            for (Move nextMove : validMoves) {
+                Point nextPos = new Point(currPos, nextMove);
+                if (currPath.contains(nextPos))
+                    continue;
+
+                int nrThreats = threats.getOrDefault(nextPos, 0);
+                int nextNrThreats = currNrThreats + nrThreats;
+                if (nextNrThreats > threatsAllowed)
+                    continue;
+
+                Path nextPath = new Path(currPath, nextPos, nextMove, nrThreats, this);
+
+                if (!searchWhile.test(nextPath)) {
+                    if (targets.isEmpty())
+                        paths.add(currPath);
+                    break;
+                }
+
+                if (targets.contains(nextPos)) {
+                    paths.add(nextPath);
+                }
+
+                stack.addFirst(new Pair<>(nextPath, nextNrThreats));
+            }
+        }
+
+        // Order the paths by increasing length
+        paths.sort(Comparator.comparing(Path::nrMoves).thenComparing(Path::nrThreats));
+
+        // Filter out the paths that are too round-about
+        Map<Point, Integer> minDistancePerTarget = new HashMap<>();
+        paths.forEach(path ->
+            minDistancePerTarget.putIfAbsent(path.end(), path.nrMoves())
+        );
+        paths.removeIf(path ->
+                path.nrMoves() / 2 > minDistancePerTarget.get(path.end())
+        );
+
+        return paths;
     }
 
     /**

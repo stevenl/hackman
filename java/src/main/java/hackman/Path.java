@@ -34,6 +34,7 @@ public class Path {
     private Point end;
     private List<Move> moves;
     private List<Point> positions;
+    private Set<Point> positionSet;
     private Map<Integer, Integer> threatsByMove; // moveNr : nrThreats
     private List<Integer> intersectionMoves;
 
@@ -43,6 +44,7 @@ public class Path {
 
         this.moves     = new ArrayList<>();
         this.positions = new ArrayList<>();
+        this.positionSet = new HashSet<>();
         this.threatsByMove = new HashMap<>();
         this.intersectionMoves = new ArrayList<>();
     }
@@ -52,6 +54,7 @@ public class Path {
         this.start = start;
         this.end   = start;
         this.positions.add(start);
+        this.positionSet.add(start);
     }
 
     public Path(Path path, Point nextPosition, Move nextMove, int nrThreats, State state) {
@@ -62,6 +65,7 @@ public class Path {
 
         this.end = nextPosition;
         this.positions.add(nextPosition);
+        this.positionSet.add(nextPosition);
 
         this.moves.add(nextMove);
 
@@ -82,6 +86,7 @@ public class Path {
 
         this.moves.addAll(moves);
         this.positions.addAll(positions);
+        this.positionSet.addAll(positions);
         this.threatsByMove.putAll(threatsByMove);
         this.intersectionMoves.addAll(intersectionMoves);
     }
@@ -166,6 +171,10 @@ public class Path {
             i++;
         }
         return this.positions.get(n);
+    }
+
+    public boolean contains(Point p) {
+        return this.positionSet.contains(p);
     }
 
     public Move move(int n) {

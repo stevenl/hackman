@@ -250,7 +250,7 @@ public class Player {
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
             Map<Point, Integer> threats = getPotentialThreats();
-            this.pathsToThreats = state.findShortestPathsPerDirection(this.position, threats.keySet(), null, 0, null);
+            this.pathsToThreats = state.findPaths(this.position, threats.keySet(), null, 0, null);
 
             // Is the path too round-about? It's unlikely the threat will come that way
             Map<Point, Integer> minDistancePerThreat = new HashMap<>();
@@ -437,7 +437,7 @@ public class Player {
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         //System.err.println(String.format("[%d] nearby=%s", id, getNearbyThreats()));
-        //System.err.println(String.format("[%d] traps=%s", id, getTraps()V));
+        //System.err.println(String.format("[%d] traps=%s", id, getTraps()));
 
         if (!this.hasWeapon) {
             if (isTrapped()) {
