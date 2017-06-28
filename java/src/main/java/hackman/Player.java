@@ -254,15 +254,6 @@ public class Player {
                     ? state.findPaths(this.position, threats.keySet(), null, 0, null)
                     : new ArrayList<>();
 
-            // Is the path too round-about? It's unlikely the threat will come that way
-            Map<Point, Integer> minDistancePerThreat = new HashMap<>();
-            for (Path toThreat : this.pathsToThreats)
-                minDistancePerThreat.putIfAbsent(toThreat.end(), toThreat.nrMoves());
-            this.pathsToThreats.removeIf(toThreat -> {
-                Point threat = toThreat.end();
-                return toThreat.nrMoves() > minDistancePerThreat.get(threat) * 2;
-            });
-
             // Is the enemy moving away? It's unlikely he will come back this way
             Map<Point, Integer> prevEnemyPositions = state.getPreviousEnemyPositions();
             if (!prevEnemyPositions.isEmpty()) {
@@ -274,6 +265,15 @@ public class Player {
                             prevEnemyPositions.get(penultimatePos) == threats.get(pos);
                 });
             }
+
+            // Is the path too round-about? It's unlikely the threat will come that way
+            Map<Point, Integer> minDistancePerThreat = new HashMap<>();
+            for (Path toThreat : this.pathsToThreats)
+                minDistancePerThreat.putIfAbsent(toThreat.end(), toThreat.nrMoves());
+            this.pathsToThreats.removeIf(toThreat -> {
+                Point threat = toThreat.end();
+                return toThreat.nrMoves() > minDistancePerThreat.get(threat) * 2;
+            });
             //for (Path p : pathsToThreats) System.err.println(String.format("toThreats[%d]=%s", id, p));
         }
         return this.pathsToThreats;
