@@ -250,7 +250,9 @@ public class Player {
     private List<Path> getPathsToThreats() {
         if (this.pathsToThreats == null) {
             Map<Point, Integer> threats = getPotentialThreats();
-            this.pathsToThreats = state.findPaths(this.position, threats.keySet(), null, 0, null);
+            this.pathsToThreats = !threats.isEmpty()
+                    ? state.findPaths(this.position, threats.keySet(), null, 0, null)
+                    : new ArrayList<>();
 
             // Is the path too round-about? It's unlikely the threat will come that way
             Map<Point, Integer> minDistancePerThreat = new HashMap<>();
