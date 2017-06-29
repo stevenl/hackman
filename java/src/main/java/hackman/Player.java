@@ -311,8 +311,8 @@ public class Player {
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
         getTraps().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
 
-        int threatsAllowed = hasWeapon() ? 1 : 0;
-        List<Path> escapePaths = state.findShortestPathsPerDirection(this.position, null, avoid, threatsAllowed, p -> p.nrIntersections() < 2);
+        int nrThreatsAllowed = hasWeapon() ? 1 : 0;
+        List<Path> escapePaths = state.findShortestPathsPerDirection(this.position, null, avoid, nrThreatsAllowed, p -> p.nrIntersections() < 2);
         return escapePaths.isEmpty();
     }
 
@@ -434,6 +434,7 @@ public class Player {
         if (getTargets().isEmpty())
             searchWhile = (p -> p.nrMoves() <= 8);
 
+        int nrThreatsAllowed = this.hasWeapon ? 1 : 0;
         List<Path> paths = null;
         Map<Point, Integer> avoid = new HashMap<>();
         getNearbyThreats().forEach((k, v) -> avoid.merge(k, v, Integer::sum));
@@ -451,14 +452,14 @@ public class Player {
 
             // Safe strategy: Avoid all threats and traps
             if (paths == null) {
-                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, 0, searchWhile);
+                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, nrThreatsAllowed, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe1=%s", id, paths.get(0)));
             }
 
             // Fallback: Going after the target is too dangerous
             if (paths.isEmpty()) {
                 searchWhile = (p -> p.nrMoves() <= 8);
-                paths = state.findShortestPathsPerDirection(this.position, null, avoid, 0, searchWhile);
+                paths = state.findShortestPathsPerDirection(this.position, null, avoid, nrThreatsAllowed, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] safe2=%s", id, paths.get(0)));
             }
 
@@ -511,10 +512,14 @@ public class Player {
             // Go for a target
             if (paths == null) {
                 // Is it worth using up the weapon? Not if it doesn't save many steps to reach the target
-                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, 1, searchWhile);
+                paths = state.findShortestPathsPerDirection(this.position, getTargets(), avoid, nrThreatsAllowed, searchWhile);
                 //if (!paths.isEmpty()) System.err.println(String.format("[%d] weapon2=%s", id, paths.get(0)));
             }
         }
+
+        List<Path> tieBreakers = state.findShortestPaths(this.position, getTargets(), getNearbyThreats(), nrThreatsAllowed, searchWhile);
+        paths.addAll(tieBreakers);
+
         return paths;
     }
 
